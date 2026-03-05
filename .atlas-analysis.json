@@ -1,0 +1,134 @@
+{
+  "projectType": "frontend",
+  "projectName": "Citizen",
+  "projectDescription": "A beautiful, usable, responsive MediaWiki skin with in-depth extension support.",
+  "theme": "palm",
+  "primaryColor": "#3366ff",
+  "lightColor": "#5c8aff",
+  "darkColor": "#1a4dd9",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "requirements"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/overview",
+              "configuration/theme",
+              "configuration/search",
+              "configuration/layout",
+              "configuration/features",
+              "configuration/extensions"
+            ]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "features/command-palette",
+              "features/preferences",
+              "features/collapsible-sections",
+              "features/table-of-contents",
+              "features/progressive-web-app",
+              "features/dark-mode"
+            ]
+          },
+          {
+            "group": "Customization",
+            "pages": [
+              "customization/theming",
+              "customization/css-variables",
+              "customization/templates",
+              "customization/resource-loader"
+            ]
+          },
+          {
+            "group": "Extension Support",
+            "pages": [
+              "extensions/overview",
+              "extensions/supported-extensions",
+              "extensions/adding-support"
+            ]
+          },
+          {
+            "group": "Development",
+            "pages": [
+              "development/setup",
+              "development/architecture",
+              "development/components",
+              "development/testing",
+              "development/contributing"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "PHP Classes",
+            "pages": [
+              "api/skin-citizen",
+              "api/components",
+              "api/hooks",
+              "api/webapp-manifest"
+            ]
+          },
+          {
+            "group": "JavaScript Modules",
+            "pages": [
+              "api/search",
+              "api/command-palette",
+              "api/preferences",
+              "api/scripts"
+            ]
+          },
+          {
+            "group": "Styling",
+            "pages": [
+              "api/css-variables",
+              "api/less-mixins",
+              "api/tokens"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Responsive layout with mobile-first design",
+    "Command palette for quick navigation and actions",
+    "Light/dark theme switching with auto mode",
+    "Extensible preferences system for user customization",
+    "Collapsible sections and persistent table of contents",
+    "Progressive Web App support with web manifest",
+    "Extensive MediaWiki extension styling support (70+ extensions)",
+    "Vue 3 based interactive components"
+  ],
+  "publicApiSurface": [
+    "MediaWiki\\Skins\\Citizen\\SkinCitizen",
+    "MediaWiki\\Skins\\Citizen\\Api\\ApiWebappManifest",
+    "MediaWiki\\Skins\\Citizen\\Hooks\\SkinHooks",
+    "MediaWiki\\Skins\\Citizen\\Components\\CitizenComponent",
+    "skins.citizen.scripts",
+    "skins.citizen.search",
+    "skins.citizen.preferences",
+    "skins.citizen.commandPalette",
+    "$wgCitizenThemeDefault",
+    "$wgCitizenThemeColor",
+    "$wgCitizenEnableManifest",
+    "$wgCitizenSearchModule",
+    "$wgCitizenSearchGateway",
+    "$wgCitizenEnableCollapsibleSections",
+    "$wgCitizenEnablePreferences",
+    "$wgCitizenEnableCommandPalette"
+  ]
+}
