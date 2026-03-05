@@ -1,0 +1,258 @@
+---
+title: Theming
+description: Learn how to customize the Citizen skin's color themes and create custom theme variations
+---
+
+Citizen uses a sophisticated theming system based on CSS custom properties (CSS variables) that allows you to customize the appearance of your wiki. The skin supports light and dark themes out of the box, with the ability to create custom theme variations.
+
+## Theme Architecture
+
+The theming system is built on several layers:
+
+1. **Base tokens** - Core design tokens shared across all themes
+2. **Theme-specific tokens** - Color values that change between light and dark modes
+3. **Codex design tokens** - MediaWiki's design system integration
+4. **Citizen-specific tokens** - Custom tokens for Citizen features
+
+### Theme Files
+
+The theme system is organized in the following files:
+
+- `resources/skins.citizen.styles/tokens.less` - Main entry point
+- `resources/skins.citizen.styles/tokens-citizen.less` - Citizen-specific tokens
+- `resources/skins.citizen.styles/tokens-codex.less` - Codex design tokens
+- `resources/skins.citizen.styles/tokens-theme-base.less` - Light theme (base)
+- `resources/skins.citizen.styles/tokens-theme-dark.less` - Dark theme
+
+## Theme Selection
+
+Users can select their preferred theme through the skin preferences menu. The default theme can be configured in `LocalSettings.php`:
+
+```php
+$wgCitizenThemeDefault = 'auto'; // 'light', 'dark', or 'auto'
+```
+
+The `auto` option respects the user's system preference via `prefers-color-scheme`.
+
+## Creating a Custom Theme
+
+### Method 1: Override CSS Variables
+
+The simplest way to customize the theme is to override CSS variables in your own stylesheet:
+
+```css
+/* In your custom CSS file */
+:root {
+  /* Override the progressive color (primary accent color) */
+  --color-progressive-oklch__l: 60%;
+  --color-progressive-oklch__c: 0.18;
+  --color-progressive-oklch__h: 180; /* Cyan instead of purple */
+  
+  /* Override surface colors */
+  --color-surface-0-oklch__l: 98%;
+  
+  /* Override link colors */
+  --color-link: #0066cc;
+  --color-link--hover: #004499;
+}
+
+/* Dark theme overrides */
+@media (prefers-color-scheme: dark) {
+  html.skin-theme-clientpref-os :root {
+    --color-progressive-oklch__h: 180;
+  }
+}
+
+html.skin-theme-clientpref-night :root {
+  --color-progressive-oklch__h: 180;
+}
+```
+
+### Method 2: Create a Custom Theme LESS File
+
+For more comprehensive theming, create a new LESS file:
+
+```less
+// resources/skins.citizen.styles/tokens-theme-custom.less
+.theme-custom() {
+  // Surface colors
+  --color-surface-0-oklch__l: 95%;
+  --color-surface-0-oklch__c: 0.02;
+  
+  // Text colors
+  --color-emphasized-oklch__l: 10%;
+  --color-base-oklch__l: 25%;
+  --color-subtle-oklch__l: 40%;
+  
+  // Progressive/accent color
+  --color-progressive-oklch__l: 55%;
+  --color-progressive-oklch__c: 0.15;
+  --color-progressive-oklch__h: 140; // Green theme
+  
+  // State colors
+  --color-destructive__h: 340;
+  --color-destructive__l: 45%;
+  --color-success__h: 170;
+  --color-success__l: 20%;
+}
+```
+
+Then apply it in your main stylesheet:
+
+```less
+@import 'tokens-theme-custom.less';
+
+:root.theme-custom {
+  .theme-custom();
+}
+```
+
+## Theme Color System
+
+### OKLCH Color Space
+
+Citizen uses the OKLCH color space for better color perception and manipulation:
+
+- **L (Lightness)**: 0% to 100%
+- **C (Chroma)**: 0 to ~0.4 (saturation)
+- **H (Hue)**: 0 to 360 degrees
+
+```css
+/* OKLCH format */
+color: oklch(60% 0.15 180);
+/*     lightness^ ^chroma ^hue */
+```
+
+The skin includes HSL fallbacks for browsers that don't support OKLCH.
+
+### Progressive Color
+
+The "progressive" color is the primary accent color used throughout the theme:
+
+```less
+// Default (purple)
+--color-progressive-oklch__h: 262.29;
+
+// Examples for other colors:
+// Blue: 220
+// Cyan: 180
+// Green: 140
+// Red: 20
+```
+
+### Surface Colors
+
+Surface colors create depth and hierarchy:
+
+- `--color-surface-0` - Base background
+- `--color-surface-1` - Slightly elevated elements
+- `--color-surface-2` - More elevated elements
+- `--color-surface-3` - Cards and panels
+- `--color-surface-4` - Top-level elevated content
+
+## Dark Theme Customization
+
+Dark theme uses different lightness values to ensure proper contrast:
+
+```less
+.theme-dark() {
+  --color-surface-0-oklch__l: 14%; // Darker base
+  --color-emphasized-oklch__l: 93%; // Lighter text
+  --color-base-oklch__l: 80%;
+  
+  // Progressive color is lighter in dark mode
+  --color-progressive-oklch__l: 60%;
+}
+```
+
+## State Colors
+
+Customize interactive state colors:
+
+```css
+:root {
+  /* Hover state lightness adjustment */
+  --delta-lightness-hover-state: 4%;
+  
+  /* Active state lightness adjustment */
+  --delta-lightness-active-state: -4%;
+  
+  /* Button states */
+  --background-color-progressive: var(--color-progressive);
+  --background-color-progressive--hover: /* auto-calculated */;
+  --background-color-destructive: /* red for dangerous actions */;
+}
+```
+
+## Theme Configuration
+
+Additional theme settings can be configured in `skin.json` or `LocalSettings.php`:
+
+```php
+// Set theme color for mobile browsers
+$wgCitizenThemeColor = '#0d0e12';
+
+// Enable manifest for PWA support
+$wgCitizenEnableManifest = true;
+
+// Manifest options
+$wgCitizenManifestOptions = [
+  'background_color' => '#0d0e12',
+  'theme_color' => '#0d0e12',
+  'icons' => [
+    // Define your app icons
+  ]
+];
+```
+
+## Best Practices
+
+1. **Test both themes** - Always test your customizations in both light and dark modes
+2. **Maintain contrast** - Ensure sufficient contrast ratios (WCAG AA minimum: 4.5:1)
+3. **Use semantic colors** - Leverage the existing color system rather than hardcoding values
+4. **Progressive enhancement** - Provide HSL fallbacks for OKLCH colors
+5. **Respect user preferences** - Don't override system theme preferences unless necessary
+
+## Examples
+
+### Brand Color Integration
+
+```css
+/* Apply your brand color as the primary accent */
+:root {
+  /* Convert your brand color to OKLCH values */
+  --color-progressive-oklch__l: 50%;
+  --color-progressive-oklch__c: 0.2;
+  --color-progressive-oklch__h: 330; /* Pink/magenta brand */
+}
+```
+
+### High Contrast Theme
+
+```css
+@media (prefers-contrast: more) {
+  :root {
+    --color-emphasized-oklch__l: 0%;
+    --color-surface-0-oklch__l: 100%;
+    --border-color-base: #000;
+  }
+}
+```
+
+### Custom Dark Theme
+
+```css
+html.skin-theme-clientpref-night :root {
+  /* Pure black background */
+  --color-surface-0-oklch__l: 0%;
+  --color-surface-0-oklch__c: 0;
+  
+  /* Reduce surface elevation differences */
+  --delta-lightness-surface-base: 1%;
+}
+```
+
+## Related
+
+- [CSS Variables](/customization/css-variables) - Complete reference of all CSS variables
+- [Resource Loader](/customization/resource-loader) - How to load custom stylesheets

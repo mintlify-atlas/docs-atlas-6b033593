@@ -1,0 +1,243 @@
+---
+title: Layout Configuration
+description: Configure page structure, header position, and responsive behavior
+---
+
+Citizen provides flexible layout options to customize the structure and behavior of your wiki's interface.
+
+## Header Position
+
+<ParamField path="$wgCitizenHeaderPosition" type="string" default="left">
+  Position of the header (logo, search, navigation) on desktop layouts.
+  
+  **Valid values:**
+  - `'left'` - Vertical header on the left side (default, recommended)
+  - `'right'` - Vertical header on the right side (useful for RTL languages)
+  - `'top'` - Horizontal header at the top
+  - `'bottom'` - Horizontal header at the bottom (experimental)
+  
+  **Example:**
+  ```php
+  // Place header on the right side
+  $wgCitizenHeaderPosition = 'right';
+  ```
+  
+  <Info>
+    The header position is automatically adjusted for mobile devices regardless of this setting. This only affects desktop layouts (typically ≥1000px width).
+  </Info>
+  
+  <Note>
+    For right-to-left (RTL) wikis, consider using `'right'` to maintain a natural reading flow.
+  </Note>
+</ParamField>
+
+## Collapsible Sections
+
+<ParamField path="$wgCitizenEnableCollapsibleSections" type="boolean" default="true">
+  Enable collapsible sections on content pages.
+  
+  When enabled, page sections (defined by headings) can be collapsed and expanded by clicking on the heading. This improves readability for long articles.
+  
+  **Example:**
+  ```php
+  // Disable collapsible sections
+  $wgCitizenEnableCollapsibleSections = false;
+  ```
+  
+  **Requirements:**
+  - Only applies to content pages (`$title->isContentPage()`)
+  - Only works with wikitext content (`CONTENT_MODEL_WIKITEXT`)
+  - Does not apply to the main page
+  
+  <Info>
+    If MobileFrontend is installed and the page is in mobile view, MobileFrontend handles section collapsing instead.
+  </Info>
+</ParamField>
+
+## Table of Contents
+
+<ParamField path="$wgCitizenTableOfContentsCollapseAtCount" type="integer" default="28">
+  The minimum number of headings required to automatically collapse all sections in the sticky table of contents.
+  
+  When a page has more headings than this threshold, the table of contents starts in a collapsed state to avoid overwhelming the interface.
+  
+  **Example:**
+  ```php
+  // Collapse TOC for pages with 20+ headings
+  $wgCitizenTableOfContentsCollapseAtCount = 20;
+  ```
+  
+  <Note>
+    This setting only affects the initial state. Users can still expand all sections manually.
+  </Note>
+</ParamField>
+
+## Overflow Handling
+
+Citizen automatically wraps overflowing content (like wide tables and code blocks) to prevent horizontal scrolling. You can customize this behavior with CSS class controls.
+
+### Inherited Classes
+
+<ParamField path="$wgCitizenOverflowInheritedClasses" type="array" default='["floatleft", "floatright"]'>
+  CSS classes that should be inherited by the overflow wrapper element.
+  
+  When Citizen wraps overflowing content, it can preserve certain CSS classes from the original element to maintain styling.
+  
+  **Example:**
+  ```php
+  $wgCitizenOverflowInheritedClasses = [
+      'floatleft',
+      'floatright',
+      'center',
+      'custom-class'
+  ];
+  ```
+  
+  <Info>
+    This is useful for maintaining alignment and positioning of wrapped elements.
+  </Info>
+</ParamField>
+
+### No-Wrap Classes
+
+<ParamField path="$wgCitizenOverflowNowrapClasses" type="array" default='["noresize", "citizen-table-nowrap", "cargoDynamicTable", "dataTable", "smw-datatable", "srf-datatable"]'>
+  CSS classes that prevent the overflow wrapper from being applied.
+  
+  Some tables and interactive elements (like DataTables) handle their own scrolling and shouldn't be wrapped by Citizen's overflow handler.
+  
+  **Example:**
+  ```php
+  $wgCitizenOverflowNowrapClasses = [
+      'noresize',
+      'citizen-table-nowrap',
+      'my-custom-table',
+      'no-wrap'
+  ];
+  ```
+  
+  <Warning>
+    Only add classes for elements that properly handle their own overflow. Elements without overflow handling may break the page layout on mobile devices.
+  </Warning>
+</ParamField>
+
+## Complete Example
+
+```php
+// Complete layout configuration example
+wfLoadSkin( 'Citizen' );
+
+// Header configuration
+$wgCitizenHeaderPosition = 'left';
+
+// Section behavior
+$wgCitizenEnableCollapsibleSections = true;
+$wgCitizenTableOfContentsCollapseAtCount = 25;
+
+// Overflow handling
+$wgCitizenOverflowInheritedClasses = [
+    'floatleft',
+    'floatright',
+    'center'
+];
+
+$wgCitizenOverflowNowrapClasses = [
+    'noresize',
+    'citizen-table-nowrap',
+    'cargoDynamicTable',
+    'dataTable',
+    'smw-datatable',
+    'srf-datatable'
+];
+```
+
+## Responsive Behavior
+
+Citizen automatically adapts the layout based on screen size:
+
+### Mobile (under 1000px)
+- Header becomes a horizontal bar at the top
+- Navigation drawer slides in from the side
+- Search expands to full-screen overlay
+- Table of contents moves to a bottom sheet
+
+### Tablet (1000px-1280px)
+- Compact sidebar layout
+- Sticky table of contents
+- Responsive navigation
+
+### Desktop (over 1280px)
+- Full featured layout
+- Persistent navigation
+- Side-by-side table of contents
+- Sticky header (based on `$wgCitizenHeaderPosition`)
+
+## Layout Hooks
+
+Citizen provides several hooks for customizing layout behavior:
+
+```php
+// Modify sidebar before rendering
+$wgHooks['SkinBuildSidebar'][] = function( $skin, &$sidebar ) {
+    // Customize $sidebar array
+};
+
+// Modify navigation links
+$wgHooks['SkinTemplateNavigation'][] = function( $skin, &$links ) {
+    // Customize $links array
+};
+```
+
+## CSS Customization
+
+You can further customize the layout using custom CSS in `MediaWiki:Citizen.css`:
+
+```css
+/* Adjust content width */
+.citizen-body {
+    max-width: 1200px;
+}
+
+/* Customize header spacing */
+.citizen-header {
+    padding: 20px;
+}
+
+/* Adjust table of contents position */
+.citizen-toc {
+    top: 100px;
+}
+```
+
+## Troubleshooting
+
+### Header Not Showing
+
+Check that the header position value is valid:
+```php
+$wgCitizenHeaderPosition = 'left'; // Valid values: left, right, top, bottom
+```
+
+### Sections Not Collapsing
+
+Verify the page meets all requirements:
+- Is a content page
+- Uses wikitext content model
+- Is not the main page
+- `$wgCitizenEnableCollapsibleSections` is `true`
+
+### Table Overflow Issues
+
+Add the table's CSS class to the no-wrap list:
+```php
+$wgCitizenOverflowNowrapClasses[] = 'my-table-class';
+```
+
+Or add the `citizen-table-nowrap` class to your table:
+```html
+{| class="wikitable citizen-table-nowrap"
+|-
+! Header 1 !! Header 2
+|-
+| Cell 1 || Cell 2
+|}
+```

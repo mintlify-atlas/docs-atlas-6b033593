@@ -1,0 +1,260 @@
+---
+title: Architecture
+description: Understand the architecture and directory structure of the Citizen MediaWiki skin
+---
+
+## Overview
+
+Citizen is a MediaWiki skin built on the `SkinMustache` framework. It combines server-side rendering with modern client-side interactivity using multiple technologies:
+
+- **PHP**: Server-side logic and component generation
+- **Mustache**: Template rendering
+- **LESS**: Styling and theming
+- **JavaScript**: Client-side interactivity (CommonJS modules)
+- **Vue 3**: Interactive components with Composition API
+- **ResourceLoader**: MediaWiki's asset delivery system
+
+## Directory Structure
+
+```
+mediawiki-skins-Citizen/
+├── includes/              # PHP backend code
+│   ├── Components/       # PHP component classes
+│   ├── Hooks/           # MediaWiki hook handlers
+│   ├── Api/             # API endpoints
+│   ├── SkinCitizen.php  # Main skin class
+│   └── PreferencesConfigProvider.php
+├── resources/            # Frontend assets
+│   ├── skins.citizen.styles/        # Core styles
+│   ├── skins.citizen.scripts/       # Core scripts
+│   ├── skins.citizen.search/        # Search functionality
+│   ├── skins.citizen.commandPalette/ # Command palette
+│   ├── skins.citizen.preferences/   # User preferences
+│   ├── mixins.less                  # LESS mixins
+│   └── variables.less               # LESS variables
+├── templates/            # Mustache templates
+├── skinStyles/          # Extension-specific styles
+├── i18n/                # Internationalization
+├── tests/               # Test suites
+│   ├── phpunit/        # PHP unit tests
+│   └── vitest/         # JavaScript tests
+├── skin.json            # Skin configuration (source of truth)
+└── composer.json        # PHP dependencies
+```
+
+## Core Technologies
+
+### PHP Backend
+
+The PHP layer handles server-side rendering and data preparation:
+
+- **`SkinCitizen.php`**: Main skin class extending `SkinMustache`
+- **Components**: Modular PHP classes implementing `CitizenComponent` interface
+- **Hooks**: Integration with MediaWiki's hook system
+
+#### PHP Conventions
+
+- All files start with `declare( strict_types=1 );`
+- Use native PHP types for properties, parameters, and return values
+- Use PHPDoc only for collection types (e.g., `string[]`)
+- Always use MediaWiki-namespaced imports:
+  ```php
+  use MediaWiki\Title\Title;
+  use MediaWiki\Content\TextContent;
+  ```
+- Avoid legacy shims like `use Title;` (will be removed in future MW versions)
+
+### Mustache Templates
+
+Templates in `templates/` define the HTML structure. They receive data from PHP components via the `getTemplateData()` method.
+
+### LESS/CSS Styling
+
+Citizen uses LESS for styles with a modern approach:
+
+- **CSS Custom Properties**: Preferred over LESS variables (defined in `tokens-citizen.less`)
+- **LESS Variables**: Only import `variables.less` or `mixins.less` when LESS-specific features are needed
+- **Modular Structure**: Styles organized by ResourceLoader module
+
+#### Style Organization
+
+```less
+// Prefer CSS custom properties
+.element {
+  color: var(--color-primary);
+  padding: var(--space-md);
+}
+
+// Use LESS only when needed (mixins, calculations)
+@import 'mixins.less';
+
+.component {
+  .responsive-layout();
+}
+```
+
+### JavaScript
+
+Citizen uses CommonJS modules for JavaScript:
+
+```javascript
+// Imports
+const utils = require( './utils.js' );
+const mw = require( 'mediawiki' );
+
+// Exports
+module.exports = {
+  init: function() {
+    // Implementation
+  }
+};
+```
+
+Tests use Vitest with JSDOM for DOM testing.
+
+### Vue 3 Components
+
+Interactive components use Vue 3 with Composition API:
+
+```javascript
+const { defineComponent, ref } = require( 'vue' );
+
+module.exports = exports = defineComponent( {
+  name: 'ComponentName',
+  setup() {
+    const state = ref( null );
+    
+    return {
+      state
+    };
+  }
+} );
+```
+
+## ResourceLoader Integration
+
+The `skin.json` file is the **source of truth** for how resources are loaded. It defines:
+
+- ResourceLoader modules
+- Hook registrations
+- Configuration variables
+- Extension skin styles
+
+### Adding Files to ResourceLoader
+
+When adding or removing files under `resources/`, update the corresponding entry in `skin.json`:
+
+```json
+{
+  "ResourceModules": {
+    "skins.citizen.scripts": {
+      "packageFiles": [
+        "skins.citizen.scripts/index.js",
+        "skins.citizen.scripts/newModule.js"
+      ]
+    }
+  }
+}
+```
+
+### Configuration Variables
+
+Config variables are declared in `skin.json` with the `wgCitizen` prefix:
+
+```json
+{
+  "config": {
+    "CitizenFeatureName": {
+      "value": true,
+      "description": "Enable feature name"
+    }
+  }
+}
+```
+
+Access in PHP:
+```php
+$this->getConfig()->get( 'CitizenFeatureName' );
+```
+
+### Extension Styles
+
+Support for MediaWiki extensions is added via `skinStyles/`:
+
+1. Create a LESS file: `skinStyles/ExtensionName/styles.less`
+2. Register in `skin.json` under `ResourceModuleSkinStyles`:
+
+```json
+{
+  "ResourceModuleSkinStyles": {
+    "ext.extensionName": "skinStyles/ExtensionName/styles.less"
+  }
+}
+```
+
+## Codex Integration
+
+Citizen uses the Codex design system bundled with MediaWiki:
+
+- **Minimum version**: Codex v1.14.0 (bundled with MW 1.43)
+- **Never assume a specific Codex version** - newer MW versions may provide newer Codex
+- **JS Components**: Must be listed in `skin.json` under the appropriate `CodexModule`
+
+Example component usage:
+```php
+new CitizenComponentButton(
+  label: 'Click me',
+  icon: 'cdx-icon-add',
+  weight: 'primary',
+  action: 'progressive'
+);
+```
+
+## Data Flow
+
+1. **Request arrives** at MediaWiki
+2. **SkinCitizen** class instantiates
+3. **Components** generate template data via `getTemplateData()`
+4. **Mustache templates** render HTML using component data
+5. **ResourceLoader** delivers CSS/JS to client
+6. **Client-side scripts** initialize (vanilla JS + Vue components)
+7. **User interacts** with the page
+
+## Build Process
+
+Citizen doesn't use a traditional build process. Instead:
+
+- **ResourceLoader** handles asset delivery
+- **LESS** is compiled by ResourceLoader on-demand (and cached)
+- **JavaScript** is loaded as CommonJS modules
+- **No bundling step** required for development
+
+For production, MediaWiki's built-in ResourceLoader optimization handles:
+- Minification
+- Concatenation
+- Cache management
+- CDN delivery
+
+## Extension Points
+
+Citizen provides several ways to extend functionality:
+
+1. **MediaWiki Hooks**: Standard hook integration via `skin.json`
+2. **Configuration Variables**: Customizable behavior via `$wgCitizenConfig`
+3. **User Preferences**: Extensible preferences system for gadgets
+4. **ResourceLoader Modules**: Can be loaded by extensions
+5. **CSS Custom Properties**: Theme customization via CSS variables
+
+## Performance Considerations
+
+- **Server-side rendering**: Critical content rendered server-side for fast initial paint
+- **Progressive enhancement**: Core functionality works without JavaScript
+- **Lazy loading**: Non-critical components loaded on-demand
+- **ResourceLoader optimization**: Automatic minification and caching
+- **CSS custom properties**: Runtime theming without rebuilding
+
+## Next Steps
+
+- Explore the [Component System](/development/components)
+- Learn about [Testing](/development/testing)
+- Review [Contributing Guidelines](/development/contributing)

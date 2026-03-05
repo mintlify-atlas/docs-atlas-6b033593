@@ -1,0 +1,292 @@
+---
+title: Feature Configuration
+description: Enable or disable specific skin features and functionality
+---
+
+Citizen includes several optional features that can be enabled or disabled based on your wiki's needs.
+
+## Page Tools
+
+<ParamField path="$wgCitizenShowPageTools" type="boolean" default="true">
+  Control visibility of the page tools menu.
+  
+  Page tools include actions like:
+  - Edit
+  - History
+  - Watch/Unwatch
+  - Move
+  - Delete
+  - Protect
+  - Links and references
+  
+  **Example:**
+  ```php
+  // Hide page tools
+  $wgCitizenShowPageTools = false;
+  ```
+  
+  <Warning>
+    Disabling page tools may make it harder for users to access important page actions. Only disable if you provide alternative access methods.
+  </Warning>
+</ParamField>
+
+<ParamField path="$wgCitizenGlobalToolsPortlet" type="string" default="">
+  ID of the portlet to attach global tools to.
+  
+  This allows you to move global tools (tools that appear on all pages) to a specific portlet in the interface.
+  
+  **Example:**
+  ```php
+  // Attach global tools to the sidebar
+  $wgCitizenGlobalToolsPortlet = 'p-navigation';
+  ```
+</ParamField>
+
+## User Preferences
+
+<ParamField path="$wgCitizenEnablePreferences" type="boolean" default="true">
+  Enable or disable the client-side preferences module.
+  
+  Citizen provides a Vue.js-based preferences interface that allows users to customize:
+  - Theme mode (light/dark/auto)
+  - Font size (small/standard/large/xlarge)
+  - Page width (standard/wide/full)
+  - Navigation behavior (auto-hide on/off)
+  - Performance mode (on/off)
+  - Image dimming in dark mode (on/off)
+  - Pure black dark mode (on/off)
+  
+  **Example:**
+  ```php
+  // Disable client preferences
+  $wgCitizenEnablePreferences = false;
+  ```
+  
+  <Info>
+    When disabled, users will still use MediaWiki's standard Special:Preferences page, but Citizen-specific options won't be available. User preferences are stored using MediaWiki's client preferences API.
+  </Info>
+</ParamField>
+
+## Drawer Features
+
+### Site Statistics
+
+<ParamField path="$wgCitizenEnableDrawerSiteStats" type="boolean" default="true">
+  Enable the site statistics display in the drawer menu.
+  
+  Shows information like:
+  - Total number of articles
+  - Total number of pages
+  - Total number of edits
+  - Total number of files
+  - Total number of users
+  
+  **Example:**
+  ```php
+  // Disable site stats in drawer
+  $wgCitizenEnableDrawerSiteStats = false;
+  ```
+  
+  <Note>
+    Site statistics are calculated from MediaWiki's `SiteStats` class and may be cached. Statistics may not update immediately after changes.
+  </Note>
+</ParamField>
+
+## Command Palette
+
+<ParamField path="$wgCitizenEnableCommandPalette" type="boolean" default="true">
+  Enable or disable the command palette feature.
+  
+  The command palette provides:
+  - Quick page search with previews
+  - Recent pages history
+  - Related articles (requires RelatedArticles extension)
+  - Command shortcuts (edit, history, etc.)
+  - Namespace filtering
+  - User search
+  
+  **Example:**
+  ```php
+  // Disable command palette
+  $wgCitizenEnableCommandPalette = false;
+  ```
+  
+  <Info>
+    When disabled, the traditional search interface (specified by `$wgCitizenSearchModule`) is used instead.
+  </Info>
+  
+  See the [Search Configuration](/configuration/search) page for related settings.
+</ParamField>
+
+## Client Preferences System
+
+Citizen implements MediaWiki's client preferences system to store user preferences locally. These preferences sync across devices when users are logged in.
+
+### Available Client Preferences
+
+Users can customize (when `$wgCitizenEnablePreferences` is enabled):
+
+<AccordionGroup>
+  <Accordion title="Theme Preferences">
+    - **Theme mode**: Auto (follow system), Day (light), or Night (dark)
+    - **Pure black**: Use pure black (`#000000`) for dark mode backgrounds
+    - **Image dimming**: Reduce image brightness in dark mode
+  </Accordion>
+  
+  <Accordion title="Typography Preferences">
+    - **Font size**: Small, Standard (default), Large, or Extra Large
+    - Affects body text and UI elements
+    - Persists across pages and sessions
+  </Accordion>
+  
+  <Accordion title="Layout Preferences">
+    - **Page width**: Standard, Wide, or Full
+    - Controls maximum content width
+    - Useful for different screen sizes and reading preferences
+  </Accordion>
+  
+  <Accordion title="Behavior Preferences">
+    - **Auto-hide navigation**: Automatically hide the navigation drawer when scrolling
+    - **Performance mode**: Reduce animations and visual effects for better performance
+  </Accordion>
+</AccordionGroup>
+
+### Default Client Preferences
+
+Citizen sets these default client preferences (from `SkinCitizen.php:49-56`):
+
+```php
+private const DEFAULT_CLIENT_PREFS = [
+    'citizen-feature-autohide-navigation' => '1',
+    'citizen-feature-image-dimming' => '0',
+    'citizen-feature-pure-black' => '0',
+    'citizen-feature-custom-font-size' => 'standard',
+    'citizen-feature-custom-width' => 'standard',
+    'citizen-feature-performance-mode' => '1',
+];
+```
+
+## Complete Example
+
+```php
+// Complete feature configuration example
+wfLoadSkin( 'Citizen' );
+
+// Page tools
+$wgCitizenShowPageTools = true;
+$wgCitizenGlobalToolsPortlet = '';
+
+// User preferences
+$wgCitizenEnablePreferences = true;
+
+// Drawer features
+$wgCitizenEnableDrawerSiteStats = true;
+
+// Command palette
+$wgCitizenEnableCommandPalette = true;
+```
+
+## Feature Detection
+
+You can detect enabled features in JavaScript:
+
+```javascript
+const config = mw.config.get( [
+    'wgCitizenEnablePreferences',
+    'wgCitizenEnableCommandPalette'
+] );
+
+if ( config.wgCitizenEnableCommandPalette ) {
+    // Command palette is enabled
+}
+```
+
+In PHP:
+
+```php
+$config = $this->getConfig();
+if ( $config->get( 'CitizenEnablePreferences' ) ) {
+    // Preferences are enabled
+}
+```
+
+## Progressive Enhancement
+
+Citizen follows progressive enhancement principles:
+
+1. **Core functionality works without JavaScript**
+   - Basic navigation, search, and reading always work
+   - Enhanced features gracefully degrade
+
+2. **Features load on demand**
+   - Heavy features (command palette, preferences) load only when needed
+   - ResourceLoader ensures optimal loading
+
+3. **Performance by default**
+   - `citizen-feature-performance-mode` is enabled by default
+   - Reduces animations and effects for better performance
+
+## Customizing Client Preferences
+
+Wiki administrators can customize client preferences through on-wiki configuration:
+
+1. Create `MediaWiki:CitizenPreferences.json`
+2. Define custom preferences or override defaults
+
+Example:
+```json
+{
+  "overrides": {
+    "citizen-feature-custom-font-size": {
+      "options": ["small", "standard", "large", "xlarge", "xxlarge"]
+    }
+  }
+}
+```
+
+<Note>
+See `includes/PreferencesConfigProvider.php` and `includes/Hooks/ResourceLoaderHooks.php:94-112` for implementation details.
+</Note>
+
+## Accessibility
+
+All Citizen features are designed with accessibility in mind:
+
+- Keyboard navigation support
+- Screen reader compatible
+- Respects prefers-reduced-motion
+- High contrast mode support
+- ARIA labels and landmarks
+
+## Troubleshooting
+
+### Preferences Not Saving
+
+Check that client preferences are supported:
+```php
+// Requires MediaWiki 1.38+
+$wgCitizenEnablePreferences = true;
+```
+
+Clear browser cache and cookies, then test again.
+
+### Command Palette Not Opening
+
+Verify it's enabled:
+```php
+$wgCitizenEnableCommandPalette = true;
+```
+
+Check browser console for JavaScript errors.
+
+### Site Stats Not Showing
+
+Ensure feature is enabled:
+```php
+$wgCitizenEnableDrawerSiteStats = true;
+```
+
+Run maintenance script to update stats:
+```bash
+php maintenance/run.php initSiteStats
+```

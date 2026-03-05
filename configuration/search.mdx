@@ -1,0 +1,219 @@
+---
+title: Search Configuration
+description: Configure search functionality, modules, and result display
+---
+
+Citizen provides advanced search capabilities with support for multiple search backends, the command palette, and customizable result display.
+
+## Search Module
+
+<ParamField path="$wgCitizenSearchModule" type="string" default="skins.citizen.search">
+  Which ResourceLoader module to use for search suggestions.
+  
+  **Valid values:**
+  - `'skins.citizen.search'` - Citizen's enhanced search with typeahead (recommended)
+  - `'mediawiki.searchSuggest'` - MediaWiki core search
+  - `'custom'` - Use a custom module (must be registered separately)
+  
+  **Example:**
+  ```php
+  // Use MediaWiki core search
+  $wgCitizenSearchModule = 'mediawiki.searchSuggest';
+  ```
+  
+  <Info>
+    The Citizen search module provides a better user experience with rich previews, thumbnails, and keyboard navigation. Only change this if you have specific requirements.
+  </Info>
+</ParamField>
+
+## Search Gateway
+
+<ParamField path="$wgCitizenSearchGateway" type="string" default="mwRestApi">
+  Which API gateway to use for fetching search suggestions.
+  
+  **Valid values:**
+  - `'mwRestApi'` - MediaWiki REST API (recommended, requires MW 1.35+)
+  - `'mwActionApi'` - MediaWiki Action API (legacy)
+  - `'custom'` - Use a custom gateway (must be implemented in JS)
+  
+  **Example:**
+  ```php
+  // Use Action API for older wikis
+  $wgCitizenSearchGateway = 'mwActionApi';
+  ```
+  
+  <Warning>
+    The REST API provides better performance and richer results. Only use Action API if your MediaWiki version doesn't support REST API.
+  </Warning>
+</ParamField>
+
+## Search Results
+
+### Description Source
+
+<ParamField path="$wgCitizenSearchDescriptionSource" type="string" default="textextracts">
+  The source for short descriptions shown in search suggestions.
+  
+  **Valid values:**
+  - `'textextracts'` - Use TextExtracts extension (requires TextExtracts)
+  - `'pagedescription'` - Use PageDescription if available
+  - `'wikidata'` - Use Wikidata descriptions (requires Wikibase)
+  
+  **Example:**
+  ```php
+  // Use Wikidata descriptions
+  $wgCitizenSearchDescriptionSource = 'wikidata';
+  ```
+  
+  <Note>
+    TextExtracts is bundled with MediaWiki core and provides high-quality excerpts from page content. Other sources require specific extensions to be installed.
+  </Note>
+</ParamField>
+
+### Maximum Results
+
+<ParamField path="$wgCitizenMaxSearchResults" type="integer" default="10">
+  The maximum number of suggestions displayed in search results.
+  
+  Higher values show more results but may impact performance on slower connections.
+  
+  **Example:**
+  ```php
+  // Show 15 search results
+  $wgCitizenMaxSearchResults = 15;
+  ```
+  
+  <Warning>
+    Values above 20 may negatively impact search performance and user experience. Keep this between 5 and 15 for best results.
+  </Warning>
+</ParamField>
+
+## Command Palette
+
+The command palette is Citizen's powerful quick-access feature that combines search, navigation, and commands in one interface.
+
+<ParamField path="$wgCitizenEnableCommandPalette" type="boolean" default="true">
+  Enable or disable the command palette feature.
+  
+  The command palette (activated by pressing `/` or clicking the search icon) provides:
+  - Quick page search with rich previews
+  - Recent pages history
+  - Related articles
+  - Special page commands
+  - Namespace filtering
+  - Action commands (edit, history, etc.)
+  
+  **Example:**
+  ```php
+  // Disable command palette, use traditional search
+  $wgCitizenEnableCommandPalette = false;
+  ```
+  
+  <Info>
+    When disabled, Citizen falls back to the traditional search module specified in `$wgCitizenSearchModule`.
+  </Info>
+</ParamField>
+
+## Search Extensions Integration
+
+Citizen automatically detects and integrates with popular MediaWiki search extensions:
+
+### AdvancedSearch
+
+When the [AdvancedSearch](https://www.mediawiki.org/wiki/Extension:AdvancedSearch) extension is installed, Citizen displays an "Advanced Search" option in search results.
+
+### MediaSearch
+
+When the [MediaSearch](https://www.mediawiki.org/wiki/Extension:MediaSearch) extension is installed, Citizen adds a "Media Search" option to search for files and media.
+
+### Semantic MediaWiki
+
+Citizen includes a special search client (`smwAskApi`) for Semantic MediaWiki installations, enabling semantic queries through the search interface.
+
+## Complete Example
+
+```php
+// Complete search configuration example
+wfLoadSkin( 'Citizen' );
+
+// Use enhanced Citizen search with REST API
+$wgCitizenSearchModule = 'skins.citizen.search';
+$wgCitizenSearchGateway = 'mwRestApi';
+
+// Configure search results
+$wgCitizenSearchDescriptionSource = 'textextracts';
+$wgCitizenMaxSearchResults = 12;
+
+// Enable command palette
+$wgCitizenEnableCommandPalette = true;
+```
+
+## Search Clients
+
+Citizen includes several built-in search clients (in `resources/skins.citizen.search/searchClients/`):
+
+<CodeGroup>
+```javascript mwRestApi.js
+// REST API client (default)
+// Uses /w/rest.php/v1/search endpoints
+// Provides rich results with thumbnails and descriptions
+```
+
+```javascript mwActionApi.js
+// Action API client (legacy)
+// Uses api.php?action=opensearch
+// Simpler results, better compatibility
+```
+
+```javascript smwAskApi.js
+// Semantic MediaWiki client
+// Uses SMW Ask API for semantic queries
+// Requires Semantic MediaWiki extension
+```
+</CodeGroup>
+
+## Troubleshooting
+
+### Search Not Working
+
+1. Check that your search backend is configured:
+   ```php
+   // Use database search (basic)
+   $wgSearchType = 'SearchDatabase';
+   
+   // Or use CirrusSearch (advanced, requires Elasticsearch)
+   wfLoadExtension( 'CirrusSearch' );
+   $wgSearchType = 'CirrusSearch';
+   ```
+
+2. Verify REST API is enabled for `mwRestApi` gateway:
+   ```php
+   $wgEnableRestAPI = true;
+   ```
+
+3. Check browser console for JavaScript errors
+
+### No Search Descriptions
+
+Ensure TextExtracts is available:
+```bash
+php maintenance/run.php update --quick
+```
+
+Or change the description source:
+```php
+$wgCitizenSearchDescriptionSource = 'pagedescription';
+```
+
+### Slow Search Results
+
+Reduce the number of results:
+```php
+$wgCitizenMaxSearchResults = 8;
+```
+
+Or consider using CirrusSearch for better performance:
+```php
+wfLoadExtension( 'CirrusSearch' );
+$wgSearchType = 'CirrusSearch';
+```

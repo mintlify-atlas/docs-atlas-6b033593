@@ -1,0 +1,467 @@
+---
+title: Extension Integration
+description: Configure Citizen's integration with MediaWiki extensions
+---
+
+Citizen includes extensive styling and integration for popular MediaWiki extensions. Most integrations work automatically when the extension is installed.
+
+## Automatic Detection
+
+Citizen automatically detects installed extensions using MediaWiki's `ExtensionRegistry`:
+
+```php
+// Example from ResourceLoaderHooks.php
+$extensionRegistry = ExtensionRegistry::getInstance();
+if ( $extensionRegistry->isLoaded( 'AdvancedSearch' ) ) {
+    // Enable AdvancedSearch integration
+}
+```
+
+## Supported Extensions
+
+Citizen provides custom styles and integration for 100+ extensions. Below are the major categories.
+
+## Search Extensions
+
+### AdvancedSearch
+
+Provides advanced search form with filters and options.
+
+**Styles:** `skinStyles/extensions/AdvancedSearch/`
+
+**Auto-detected:** Yes
+
+**Configuration:** None required
+
+<CodeGroup>
+```php LocalSettings.php
+wfLoadExtension( 'AdvancedSearch' );
+// Citizen automatically detects and integrates
+```
+</CodeGroup>
+
+### MediaSearch
+
+Enables media (file) search with visual results.
+
+**Styles:** `skinStyles/extensions/MediaSearch/`
+
+**Auto-detected:** Yes
+
+**Configuration:** None required
+
+### CirrusSearch
+
+Elasticsearch-powered search for better performance.
+
+**Recommendation:** Use with `$wgCitizenSearchGateway = 'mwRestApi'` for optimal results.
+
+## Visual Editor Extensions
+
+### VisualEditor
+
+Visual editing interface for MediaWiki.
+
+**Styles:** `skinStyles/extensions/VisualEditor/`
+
+**Supported modules:**
+- `ext.visualEditor.desktopArticleTarget.init`
+- `ext.visualEditor.core`
+- `ext.visualEditor.mwcore`
+- `ext.visualEditor.mwtransclusion`
+- And more (see `skin.json:739-748`)
+
+**Integration notes:**
+- Citizen detects if VE edit tab is first
+- Styles integrated with sticky header
+- Custom save dialog styling
+
+### WikiEditor
+
+Enhanced wikitext editor with toolbar.
+
+**Styles:** `skinStyles/extensions/WikiEditor/`
+
+### CodeMirror
+
+Syntax highlighting for code editing.
+
+**Styles:** `skinStyles/extensions/CodeMirror/`
+
+**Supported versions:**
+- CodeMirror 5 (`ext.CodeMirror.lib`)
+- CodeMirror 6 (`ext.CodeMirror.v6`)
+
+## Semantic Extensions
+
+### Semantic MediaWiki (SMW)
+
+Adds semantic capabilities to MediaWiki.
+
+**Styles:** `skinStyles/extensions/SemanticMediaWiki/`
+
+**Modules styled:** 20+ SMW modules including:
+- Ask special page
+- Browse special page
+- Data tables
+- Tooltips
+- JSON view
+
+**Search integration:** Custom `smwAskApi` search client available
+
+<CodeGroup>
+```php LocalSettings.php
+wfLoadExtension( 'SemanticMediaWiki' );
+// Citizen provides comprehensive styling
+```
+</CodeGroup>
+
+### Semantic Result Formats (SRF)
+
+60+ result formats for SMW queries.
+
+**Styles:** `skinStyles/extensions/SemanticResultFormats/`
+
+**Supported formats:**
+- Charts (D3, Flot, jqPlot)
+- Calendars and timelines
+- Maps (Leaflet integration)
+- Galleries and slideshows
+- DataTables
+- Filtered results
+- And many more
+
+### Cargo
+
+Database storage and querying for structured data.
+
+**Styles:** `skinStyles/extensions/Cargo/`
+
+**Styled features:**
+- Cargo tables
+- Dynamic tables
+- Calendar format
+- Gantt charts
+- Timeline format
+- Drilldown interface
+
+## Notification Extensions
+
+### Echo
+
+Notification system for MediaWiki.
+
+**Styles:** `skinStyles/extensions/Echo/`
+
+**Integration:**
+- Custom badge styling in header
+- Notification flyout styling
+- Special page styling
+- Desktop and mobile views
+
+**JavaScript:** `resources/skins.citizen.scripts/echo.js` for enhanced interactions
+
+### CentralNotice
+
+Banner notification system.
+
+**Styles:** `skinStyles/extensions/CentralNotice/`
+
+## Discussion Extensions
+
+### DiscussionTools
+
+Modern discussion and reply tools.
+
+**Styles:** `skinStyles/extensions/DiscussionTools/`
+
+### Flow
+
+Structured discussion system.
+
+**Styles:** `skinStyles/extensions/Flow/`
+
+**Modules styled:**
+- Discussion boards
+- Topic pages
+- Reply widget
+- VisualEditor integration
+
+### CommentStreams
+
+Comment system for pages.
+
+**Styles:** `skinStyles/extensions/CommentStreams/`
+
+## Content Extensions
+
+### Tabs / TabberNeue
+
+Tabbed content interface.
+
+**Styles:**
+- `skinStyles/extensions/Tabs/`
+- `skinStyles/extensions/TabberNeue/`
+
+### Cite
+
+Citation and reference system.
+
+**Styles:** `skinStyles/extensions/Cite/`
+
+### SyntaxHighlight_GeSHi
+
+Code syntax highlighting.
+
+**Styles:** `skinStyles/extensions/SyntaxHighlight_GeSHi/`
+
+### TimedMediaHandler
+
+Audio and video playback.
+
+**Styles:** `skinStyles/extensions/TimedMediaHandler/`
+
+### PortableInfobox
+
+Infobox templates.
+
+**Styles:** `skinStyles/extensions/PortableInfobox/`
+
+## Map Extensions
+
+### Kartographer
+
+Map display and editing.
+
+**Styles:** Uses shared Leaflet styles (`skinStyles/lib/leaflet/`)
+
+### Maps
+
+Multiple mapping services support.
+
+**Styles:** Uses shared Leaflet styles
+
+### DataMaps
+
+Interactive data maps.
+
+**Styles:** `skinStyles/extensions/DataMaps/`
+
+## Translation Extensions
+
+### Translate
+
+Translation workflow for MediaWiki.
+
+**Styles:** `skinStyles/extensions/Translate/`
+
+**Modules styled:** 15+ Translate modules including:
+- Translation editor
+- Message tables
+- Group selector
+- Special pages
+- Statistics displays
+
+### UniversalLanguageSelector (ULS)
+
+Language selection and input.
+
+**Styles:** `skinStyles/extensions/UniversalLanguageSelector/`
+
+## Wikibase
+
+Structured data (powers Wikidata).
+
+**Styles:** `skinStyles/extensions/Wikibase/`
+
+## Other Notable Extensions
+
+### Popups (PagePreviews)
+
+Page preview cards on hover.
+
+**Styles:** `skinStyles/extensions/Popups/`
+
+**Integration:** Works seamlessly with Citizen's design language
+
+### MobileFrontend
+
+Mobile-optimized view.
+
+**Integration:**
+- Citizen detects MobileFrontend context
+- Delegates mobile formatting to MF when appropriate
+- See `SkinCitizen.php:326-328` for detection logic
+
+```php
+// Citizen checks MobileFrontend context
+$this->mfContext === null || !$this->mfContext->shouldDisplayMobileView();
+```
+
+### RevisionSlider
+
+Visual diff navigation.
+
+**Styles:** `skinStyles/extensions/RevisionSlider/`
+
+### TwoColConflict
+
+Improved edit conflict resolution.
+
+**Styles:** `skinStyles/extensions/TwoColConflict/`
+
+### FlaggedRevs
+
+Page review and approval system.
+
+**Styles:** `skinStyles/extensions/FlaggedRevs/`
+
+## Complete Extension List
+
+Citizen includes styles for 100+ extensions. See `skin.json:570-806` for the complete list:
+
+<Accordion title="View all supported extensions">
+- AccountInfo
+- AdvancedSearch
+- AJAXPoll
+- ApprovedRevs
+- Capiunto
+- Cargo
+- CategoryTree
+- CentralNotice
+- Cite
+- CiteThisPage
+- CleanChanges
+- CodeEditor
+- CodeMirror (v5 & v6)
+- CommentStreams
+- CookieWarning
+- DataMaps
+- DiscussionTools
+- DismissableSiteNotice
+- Echo
+- FloatingUI
+- Flow
+- FlaggedRevs
+- Graph
+- Interwiki
+- Kartographer
+- Lingo
+- Maps
+- MediaSearch
+- MultimediaViewer
+- MsUpload
+- OAuth
+- Popups
+- PortableInfobox
+- RelatedArticles
+- ReplaceText
+- RevisionSlider
+- Score
+- Scribunto
+- SearchDigest
+- SemanticMediaWiki
+- SemanticResultFormats
+- SimpleTooltip
+- SmiteSpam
+- Spoilers
+- StructuredNavigation
+- SyntaxHighlight_GeSHi
+- Tabber
+- TabberNeue
+- Tabs
+- TemplateData
+- TinyMCE
+- TimedMediaHandler
+- Translate
+- TwoColConflict
+- UniversalLanguageSelector
+- UploadWizard
+- UserProfileV2
+- VEForAll
+- VisualEditor
+- Wikibase
+- WikiEditor
+- WSSearchFront
+</Accordion>
+
+## Custom Extension Integration
+
+To add styling for a custom extension:
+
+1. **Create LESS file:**
+   ```
+   skinStyles/extensions/YourExtension/ext.yourExtension.less
+   ```
+
+2. **Register in skin.json:**
+   ```json
+   "ResourceModuleSkinStyles": {
+       "citizen": {
+           "+ext.yourExtension": "skinStyles/extensions/YourExtension/ext.yourExtension.less"
+       }
+   }
+   ```
+
+3. **Use Citizen design tokens:**
+   ```less
+   @import '../../variables.less';
+   
+   .your-extension {
+       background-color: var( --background-color-base );
+       color: var( --color-base );
+   }
+   ```
+
+## Troubleshooting
+
+### Extension Styles Not Loading
+
+1. Check if extension is registered:
+   ```bash
+   php maintenance/run.php showJobs --group
+   ```
+
+2. Clear ResourceLoader cache:
+   ```bash
+   php maintenance/run.php purgeParserCache --full
+   ```
+
+3. Check browser console for 404 errors
+
+### Extension Conflicts
+
+If two extensions conflict:
+
+1. Check load order in `LocalSettings.php`
+2. Load Citizen last:
+   ```php
+   wfLoadExtension( 'Extension1' );
+   wfLoadExtension( 'Extension2' );
+   wfLoadSkin( 'Citizen' ); // Load skin last
+   ```
+
+### Missing Extension Features
+
+Some extensions require configuration:
+
+```php
+// Example: Enable Popups
+wfLoadExtension( 'Popups' );
+$wgPopupsHideOptInOnPreferencesPage = true;
+$wgPopupsOptInDefaultState = '1';
+```
+
+Refer to each extension's documentation for specific requirements.
+
+## Contributing Extension Styles
+
+To contribute styles for a new extension:
+
+1. Fork the Citizen repository
+2. Create styles in `skinStyles/extensions/YourExtension/`
+3. Add module registration to `skin.json`
+4. Test with the extension installed
+5. Submit a pull request
+
+See [CONTRIBUTING.md](https://github.com/StarCitizenTools/mediawiki-skins-Citizen/blob/main/CONTRIBUTING.md) for details.

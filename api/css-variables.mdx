@@ -1,0 +1,398 @@
+---
+title: CSS Variables
+description: CSS custom properties available in the Citizen skin for styling and theming
+---
+
+Citizen provides a comprehensive set of CSS custom properties (CSS variables) that can be used to customize the appearance of your wiki. These variables are organized into several categories and support both light and dark themes.
+
+## Color System
+
+### Progressive Colors
+
+The primary accent color used throughout the skin.
+
+| Variable | Description | Light Theme | Dark Theme |
+|----------|-------------|-------------|------------|
+| `--color-progressive` | Primary progressive color | OKLCH 53.25% 0.1679 262.29 | OKLCH 60% 0.1679 262.29 |
+| `--color-progressive--hover` | Progressive color on hover | +4% lightness | +4% lightness |
+| `--color-progressive--active` | Progressive color on active | -4% lightness | -4% lightness |
+| `--color-progressive-oklch__h` | Progressive hue (OKLCH) | 262.29 | 262.29 |
+| `--color-progressive-oklch__c` | Progressive chroma (OKLCH) | 0.1679 | 0.1679 |
+| `--color-progressive-oklch__l` | Progressive lightness (OKLCH) | 53.25% | 60% |
+
+### Surface Colors
+
+Background colors for different surface levels, with progressive tinting based on the accent color.
+
+| Variable | Description | Light Theme | Dark Theme |
+|----------|-------------|-------------|------------|
+| `--color-surface-0` | Base surface | OKLCH 96% | OKLCH 14% |
+| `--color-surface-1` | First elevated surface | Base - 2% | Base + 2% |
+| `--color-surface-1--hover` | Surface 1 hover state | +4% lightness | +4% lightness |
+| `--color-surface-1--active` | Surface 1 active state | -4% lightness | -4% lightness |
+| `--color-surface-2` | Second elevated surface | Base - 4% | Base + 4% |
+| `--color-surface-2--hover` | Surface 2 hover state | +4% lightness | +4% lightness |
+| `--color-surface-2--active` | Surface 2 active state | -4% lightness | -4% lightness |
+| `--color-surface-3` | Third elevated surface | Base - 6% | Base + 6% |
+| `--color-surface-4` | Fourth elevated surface | Base - 8% | Base + 8% |
+
+### Text Colors
+
+| Variable | Description | Light Theme | Dark Theme |
+|----------|-------------|-------------|------------|
+| `--color-base` | Primary text color | OKLCH 20% | OKLCH 80% |
+| `--color-emphasized` | Emphasized text | OKLCH 5% | OKLCH 93% |
+| `--color-subtle` | Subtle/secondary text | OKLCH 35% | OKLCH 70% |
+| `--color-placeholder` | Placeholder text | OKLCH 40% | OKLCH 60% |
+| `--color-disabled` | Disabled text | OKLCH 60% | OKLCH 50% |
+| `--color-inverted-primary` | Inverted text (on dark backgrounds) | #fff | #fff |
+| `--color-inverted-fixed` | Fixed inverted text | #fff | #fff |
+
+### Link Colors
+
+| Variable | Description |
+|----------|-------------|
+| `--color-link` | Link color (inherits from progressive) |
+| `--color-link--hover` | Link hover color |
+| `--color-link--active` | Link active color |
+| `--color-visited` | Visited link color |
+| `--color-visited--hover` | Visited link hover color |
+| `--color-visited--active` | Visited link active color |
+| `--color-link-red` | Red link color (for non-existent pages) |
+
+### State Colors
+
+| Variable | Description | Default Value |
+|----------|-------------|---------------|
+| `--color-destructive` | Destructive actions | HSL(340, 100%, 40%/50%) |
+| `--color-destructive--hover` | Destructive hover | +4% lightness |
+| `--color-destructive--active` | Destructive active | -4% lightness |
+| `--color-success` | Success state | HSL(170, 100%, 17%/35%) |
+| `--color-warning` | Warning state | HSL(48, 100%, 40%/60%) |
+| `--color-error` | Error state | Inherits from destructive |
+
+### Syntax Highlighting Colors
+
+Based on Material Theme (Lighter for light theme, Palenight for dark theme).
+
+| Variable | Light Theme | Dark Theme |
+|----------|-------------|------------|
+| `--color-syntax-red` | #e53935 | #f07178 |
+| `--color-syntax-orange` | #f76d47 | #f78c6c |
+| `--color-syntax-yellow` | #e2931d | #ffcb6b |
+| `--color-syntax-green` | #91b859 | #c3e88d |
+| `--color-syntax-cyan` | #39adb5 | #89ddff |
+| `--color-syntax-blue` | #6182b8 | #82aaff |
+| `--color-syntax-paleblue` | #8796b0 | #b2ccd6 |
+| `--color-syntax-purple` | #9c3eda | #c792ea |
+| `--color-syntax-brown` | #916b53 | #916b53 |
+| `--color-syntax-pink` | #ff5370 | #ff9cac |
+| `--color-syntax-violet` | #945eb8 | #bb80b3 |
+| `--color-syntax-grey` | #90a4ae | #676E95 |
+
+## Layout & Spacing
+
+### Size Variables
+
+| Variable | Description | Default Value |
+|----------|-------------|---------------|
+| `--size-icon` | Standard icon size | 1.25rem (20px) |
+| `--header-size` | Header width/height | 3.5rem (56px) |
+| `--toolbar-size` | Bottom toolbar height | 2.5rem (40px) |
+| `--width-layout` | Content width | 1080px |
+| `--width-layout--extended` | Extended content width | 1620px (1.5x layout) |
+| `--width-toc` | Table of contents width | 240px |
+| `--width-page` | Page width | 1080px |
+| `--padding-page` | Page side padding | 16px / 24px / 32px |
+| `--overflow-gradient-size` | Overflow gradient width | 2rem |
+
+### Spacing Scale
+
+Based on a 1rem (16px) space unit with a consistent scale.
+
+| Variable | Multiplier | Value |
+|----------|------------|-------|
+| `--space-unit` | 1.0 | 1rem (16px) |
+| `--space-xxs` | 0.25 | 0.25rem (4px) |
+| `--space-xs` | 0.5 | 0.5rem (8px) |
+| `--space-sm` | 0.75 | 0.75rem (12px) |
+| `--space-md` | 1.0 | 1rem (16px) |
+| `--space-lg` | 1.25 | 1.25rem (20px) |
+| `--space-xl` | 1.5 | 1.5rem (24px) |
+| `--space-xxl` | 2.0 | 2rem (32px) |
+
+### Header Position Variables
+
+Dynamic variables that change based on header position configuration.
+
+| Variable | Description |
+|----------|-------------|
+| `--header-direction` | Flex direction (row/column) |
+| `--header-size-inline-start` | Start inline size |
+| `--header-size-inline-end` | End inline size |
+| `--header-size-block-start` | Start block size |
+| `--header-size-block-end` | End block size |
+| `--header-inset-block-start` | Block start position |
+| `--header-inset-block-end` | Block end position |
+| `--header-offset-block-start` | Offset for sticky elements |
+| `--height-sticky-header` | Sticky header height offset |
+
+## Borders & Shadows
+
+### Border Variables
+
+| Variable | Description | Default Value |
+|----------|-------------|---------------|
+| `--border-width-base` | Base border width | 1px |
+| `--border-width-thick` | Thick border width | 2px |
+| `--border-radius-base` | Base border radius | 4px |
+| `--border-radius-medium` | Medium radius | 8px (2x base) |
+| `--border-radius-large` | Large radius | 12px (3x base) |
+| `--border-radius-sharp` | Sharp corners | 0 |
+| `--border-radius-pill` | Pill shape | 9999px |
+| `--border-radius-circle` | Circle | 50% |
+
+### Border Colors
+
+| Variable | Light Theme | Dark Theme |
+|----------|-------------|------------|
+| `--border-color-base` | rgba(0,0,0,0.1) | rgba(255,255,255,0.1) |
+| `--border-color-subtle` | rgba(0,0,0,0.05) | rgba(255,255,255,0.05) |
+| `--border-color-muted` | rgba(0,0,0,0.03) | rgba(255,255,255,0.03) |
+| `--border-color-interactive` | rgba(0,0,0,0.1) | rgba(255,255,255,0.1) |
+| `--border-color-progressive` | Progressive color | Progressive color |
+| `--border-color-destructive` | Destructive color | Destructive color |
+
+### Composite Border Styles
+
+| Variable | Value |
+|----------|-------|
+| `--border-base` | 1px solid var(--border-color-base) |
+| `--border-subtle` | 1px solid var(--border-color-subtle) |
+
+### Box Shadow Variables
+
+| Variable | Description |
+|----------|-------------|
+| `--box-shadow-small` | Small shadow | 0 0 0 1px border-color |
+| `--box-shadow-medium` | Medium shadow | Multi-layer shadow |
+| `--box-shadow-large` | Large shadow | Multi-layer shadow |
+| `--box-shadow-border` | Border-style shadow | border-color 0 0 0 1px |
+| `--box-shadow-color-alpha-base` | Shadow color with opacity | Based on progressive color |
+
+## Typography
+
+### Font Families
+
+| Variable | Default Value |
+|----------|---------------|
+| `--font-family-base` | Roboto, system-ui, sans-serif |
+| `--font-family-serif` | Roboto Serif, Linux Libertine, Georgia, serif |
+| `--font-family-monospace` | Roboto Mono, Menlo, Consolas, monospace |
+| `--font-family-overline` | var(--font-family-base) |
+
+### Font Sizes (Medium Mode)
+
+| Variable | Size | Line Height |
+|----------|------|-------------|
+| `--font-size-x-small` | 0.75rem (12px) | 1.25rem (20px) |
+| `--font-size-small` | 0.875rem (14px) | 1.375rem (22px) |
+| `--font-size-medium` | 1rem (16px) | 1.625rem (26px) |
+| `--font-size-large` | 1.125rem (18px) | 1.75rem (28px) |
+| `--font-size-x-large` | 1.25rem (20px) | 1.875rem (30px) |
+| `--font-size-xx-large` | 1.5rem (24px) | 2.125rem (34px) |
+| `--font-size-xxx-large` | 1.75rem (28px) | 2.375rem (38px) |
+
+### Font Weights
+
+| Variable | Value | Adjusted for High Contrast |
+|----------|-------|----------------------------|
+| `--font-weight-normal` | 400 | 500 (more) / 300 (less) |
+| `--font-weight-medium` | 500 | Relative to normal |
+| `--font-weight-semi-bold` | 600 | Relative to normal |
+| `--font-weight-bold` | 700 | Relative to normal |
+
+### Line Heights
+
+| Variable | Value |
+|----------|-------|
+| `--line-height-x-small` | 1.25rem |
+| `--line-height-small` | 1.375rem |
+| `--line-height-medium` | 1.625rem |
+| `--line-height-large` | 1.75rem |
+| `--line-height-x-large` | 1.875rem |
+| `--line-height-xx-large` | 2.125rem |
+| `--line-height-xxx-large` | 2.375rem |
+| `--line-height-content` | 1.625 |
+
+## Effects
+
+### Transitions
+
+| Variable | Description | Default Value |
+|----------|-------------|---------------|
+| `--transition-duration-base` | Base duration | 100ms |
+| `--transition-duration-medium` | Medium duration | 250ms |
+| `--transition-delay-menu` | Menu delay | 100ms |
+| `--transition-timing-function-ease` | Custom ease | cubic-bezier(0.44, 0.21, 0, 1) |
+| `--transition-timing-function-ease-in` | Custom ease-in | cubic-bezier(0.75, 0, 1, 1) |
+| `--transition-timing-function-ease-out` | Custom ease-out | cubic-bezier(0.215, 0.61, 0.355, 1) |
+
+### Backdrop Filters
+
+| Variable | Description | Value |
+|----------|-------------|-------|
+| `--backdrop-filter-frosted-glass` | Frosted glass effect | blur(16px) saturate(140%) |
+| `--backdrop-opacity` | Backdrop opacity | 0.65 |
+| `--opacity-glass` | Glass surface opacity | 0.9 (light) / 0.8 (dark) |
+
+### Filters
+
+| Variable | Description | Light Theme | Dark Theme |
+|----------|-------------|-------------|------------|
+| `--filter-invert` | Invert filter | none | invert(1) hue-rotate(180deg) |
+| `--filter-invert-fixed` | Fixed invert | invert(1) hue-rotate(180deg) | Same |
+| `--filter-invert-primary` | Primary invert | invert(1) hue-rotate(180deg) | Same |
+| `--filter-image-brightness` | Image brightness | none | none |
+
+### Transforms
+
+| Variable | Description | Value |
+|----------|-------------|-------|
+| `--transform-image-hover` | Image hover scale | scale(1.1) |
+
+### Opacity
+
+| Variable | Description | Value |
+|----------|-------------|-------|
+| `--opacity-icon-base` | Icon base opacity | 0.6 |
+| `--opacity-icon-base--hover` | Icon hover opacity | 0.74 |
+| `--opacity-icon-base--selected` | Icon selected opacity | 1 |
+| `--opacity-icon-base--disabled` | Icon disabled opacity | 0.51 |
+
+## Background Colors
+
+### Component Backgrounds
+
+| Variable | Description |
+|----------|-------------|
+| `--background-color-base` | Base background (surface-0) |
+| `--background-color-neutral` | Neutral background (surface-2) |
+| `--background-color-neutral-subtle` | Subtle neutral (surface-1) |
+| `--background-color-interactive` | Interactive element (surface-2) |
+| `--background-color-interactive--hover` | Interactive hover |
+| `--background-color-interactive--active` | Interactive active |
+| `--background-color-progressive` | Progressive button |
+| `--background-color-progressive--hover` | Progressive hover |
+| `--background-color-progressive--active` | Progressive active |
+| `--background-color-destructive` | Destructive button |
+| `--background-color-destructive--hover` | Destructive hover |
+| `--background-color-destructive--active` | Destructive active |
+
+### Icon Backgrounds
+
+| Variable | Light Theme | Dark Theme |
+|----------|-------------|------------|
+| `--background-color-icon` | rgba(0,0,0,0.6) | rgba(255,255,255,0.6) |
+| `--background-color-icon--hover` | rgba(0,0,0,0.74) | rgba(255,255,255,0.74) |
+| `--background-color-icon--active` | rgba(0,0,0,1) | rgba(255,255,255,1) |
+
+## Usage Examples
+
+### Custom Component Styling
+
+```css
+.my-component {
+  background-color: var(--color-surface-1);
+  color: var(--color-base);
+  border: var(--border-base);
+  border-radius: var(--border-radius-medium);
+  padding: var(--space-md);
+  transition: background-color var(--transition-duration-base) var(--transition-timing-function-ease);
+}
+
+.my-component:hover {
+  background-color: var(--color-surface-1--hover);
+}
+
+.my-component:active {
+  background-color: var(--color-surface-1--active);
+}
+```
+
+### Progressive Button
+
+```css
+.custom-button {
+  background-color: var(--background-color-progressive);
+  color: var(--color-inverted-primary);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--border-radius-base);
+  font-weight: var(--font-weight-semi-bold);
+}
+
+.custom-button:hover {
+  background-color: var(--background-color-progressive--hover);
+}
+```
+
+### Responsive Spacing
+
+```css
+.content-wrapper {
+  padding: var(--padding-page);
+  max-width: var(--width-layout);
+  margin: 0 auto;
+}
+
+/* padding-page automatically adjusts at breakpoints:
+   16px mobile, 24px tablet, 32px desktop */
+```
+
+### Frosted Glass Effect
+
+```css
+.glass-panel {
+  background: oklch(
+    var(--color-surface-1-oklch__l)
+    var(--color-surface-1-oklch__c)
+    var(--color-progressive-oklch__h)
+    / var(--opacity-glass)
+  );
+  backdrop-filter: var(--backdrop-filter-frosted-glass);
+  border: var(--border-base);
+  border-radius: var(--border-radius-large);
+}
+```
+
+## Theme-Specific Values
+
+Citizen uses CSS custom properties to automatically adapt to light and dark themes. The theme is determined by:
+
+- User preference (`.skin-theme-clientpref-night` or `.skin-theme-clientpref-day`)
+- System preference (`.skin-theme-clientpref-os` with `prefers-color-scheme: dark`)
+- Default to light theme
+
+All color variables automatically adjust based on the active theme without requiring manual overrides.
+
+## Browser Support
+
+### OKLCH Color Space
+
+Citizen uses OKLCH for perceptually uniform colors with automatic HSL fallbacks for older browsers:
+
+```css
+/* Modern browsers (OKLCH) */
+--color-progressive: oklch(53.25% 0.1679 262.29);
+
+/* Fallback for older browsers (HSL) */
+@supports not (color: oklch(100% 0 0)) {
+  --color-progressive: hsl(220, 60%, 50%);
+}
+```
+
+## Related Resources
+
+- [LESS Mixins](/api/less-mixins) - Reusable style utilities
+- [Design Tokens](/api/tokens) - Token system overview
+- [Codex Design Tokens](https://doc.wikimedia.org/codex/latest/design-tokens/) - Upstream design system

@@ -1,0 +1,96 @@
+---
+title: Extension Support Overview
+description: Learn how Citizen provides custom styling for 70+ MediaWiki extensions
+---
+
+Citizen enhances the default appearance of MediaWiki extensions through a comprehensive **skinStyles** system. This ensures that extensions integrate seamlessly with Citizen's modern, responsive design rather than appearing as disconnected UI elements.
+
+## What are skinStyles?
+
+SkinStyles are custom CSS/LESS files that skins can provide to override or enhance the default styling of MediaWiki extensions and core modules. When an extension loads its styles, MediaWiki automatically loads the corresponding skinStyles for the active skin, allowing Citizen to:
+
+- Adapt extension UI to match Citizen's design language
+- Apply Citizen's CSS custom properties (colors, spacing, typography)
+- Ensure responsive behavior across all screen sizes
+- Support both light and dark themes
+- Fix visual inconsistencies and improve usability
+
+## How skinStyles Work
+
+The skinStyles system is declared in `skin.json` under the `ResourceModuleSkinStyles` section:
+
+```json
+"ResourceModuleSkinStyles": {
+  "citizen": {
+    "+ext.echo.styles.badge": "skinStyles/extensions/Echo/ext.echo.styles.badge.less",
+    "+ext.visualEditor.core": "skinStyles/extensions/VisualEditor/ext.visualEditor.core.less"
+  }
+}
+```
+
+The `+` prefix means these styles are **appended** to the extension's original styles rather than replacing them completely. This allows Citizen to build upon the extension's base styling while maintaining compatibility.
+
+## Coverage
+
+Citizen provides skinStyles for **70+ extensions**, including:
+
+- **Editing tools**: VisualEditor, WikiEditor, CodeMirror, CodeEditor
+- **Discussion systems**: DiscussionTools, Flow, CommentStreams, Echo
+- **Semantic extensions**: Semantic MediaWiki, Semantic Result Formats, Cargo
+- **Media handling**: MultimediaViewer, TimedMediaHandler, UploadWizard
+- **UI enhancements**: Popups, Tabs, TabberNeue, PortableInfobox
+- **Translation tools**: Translate, UniversalLanguageSelector
+- **And many more...**
+
+For the complete list, see [Supported Extensions](/extensions/supported-extensions).
+
+## Design Principles
+
+When creating skinStyles, Citizen follows these principles:
+
+1. **Use CSS custom properties**: Leverage Citizen's design tokens (e.g., `--color-surface-0`, `--border-color-base`) for consistency
+2. **Maintain functionality**: Never break extension features—only enhance their appearance
+3. **Responsive by default**: Ensure extensions work well on mobile, tablet, and desktop
+4. **Theme-aware**: Support both light and dark modes automatically through CSS variables
+5. **Minimal overrides**: Only override what's necessary to maintain the extension's original design intent
+
+## Extension Categories
+
+Citizen supports extensions across several categories:
+
+### Core & Bundled Extensions
+
+Extensions that ship with MediaWiki receive first-class support, including:
+- Cite, CategoryTree, Interwiki, SyntaxHighlight
+- CodeMirror, MultimediaViewer, VisualEditor, WikiEditor
+- TemplateData, RevisionSlider, Popups
+
+### Community Extensions
+
+Popular third-party extensions from MediaWiki.org:
+- Semantic MediaWiki & Semantic Result Formats
+- Cargo, Scribunto, PortableInfobox
+- Translate, UniversalLanguageSelector
+- TabberNeue, DataMaps, FloatingUI
+
+### Specialized Extensions
+
+Extensions for specific use cases:
+- **Wikimedia**: Echo, Flow, CentralNotice, FlaggedRevs
+- **Editing**: TinyMCE, VEForAll, CodeEditor
+- **Data**: Wikibase, Cargo, Capiunto
+- **UI/UX**: Tabs, Tabber, SimpleTooltip, CookieWarning
+
+## Version Compatibility
+
+Citizen is designed for **MediaWiki 1.43.0+**. SkinStyles are tested against specific extension versions, documented in the [Supported Extensions](/extensions/supported-extensions) list. While most skinStyles remain compatible across extension versions, significant UI changes in extensions may require updates.
+
+## Contributing
+
+Want to add support for a new extension or improve existing skinStyles? See [Adding Extension Support](/extensions/adding-support) for a step-by-step guide.
+
+## Related Resources
+
+- [Supported Extensions List](/extensions/supported-extensions)
+- [Adding Extension Support Guide](/extensions/adding-support)
+- [Citizen GitHub Repository](https://github.com/StarCitizenTools/mediawiki-skins-Citizen)

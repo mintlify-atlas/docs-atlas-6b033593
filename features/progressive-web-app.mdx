@@ -1,0 +1,323 @@
+---
+title: "Progressive Web App (PWA)"
+description: "Install your wiki as a native app with offline capabilities"
+---
+
+## Overview
+
+The Citizen skin includes Progressive Web App (PWA) support through Service Worker integration. This allows users to install your wiki as a native application on their devices, providing app-like experiences including offline access (when implemented).
+
+<Note>
+PWA support is currently in early stages. The Service Worker is registered but does not yet implement caching or offline functionality.
+</Note>
+
+## What is a PWA?
+
+A Progressive Web App is a web application that uses modern web capabilities to deliver app-like experiences:
+
+- **Installable** - Add to home screen on mobile/desktop
+- **App-like interface** - Runs in standalone window
+- **Offline capable** - Can work without network connection (requires implementation)
+- **Fast loading** - Leverages caching strategies
+- **Auto-updates** - Updates automatically when changes are published
+
+## Requirements
+
+For PWA functionality to work, your MediaWiki installation must meet these requirements:
+
+### 1. Script Path at Root
+
+**Critical:** The Service Worker only registers when `$wgScriptPath` is empty (root level).
+
+```php
+// In LocalSettings.php
+$wgScriptPath = ''; // Must be at root
+```
+
+This limitation exists because Service Workers have scope restrictions. The worker can only control pages within its scope, and setting the `Service-Worker-Allowed` HTTP header requires web server configuration.
+
+<Note>
+If your wiki is installed in a subdirectory (e.g., `/wiki/`), PWA features will not be available.
+</Note>
+
+### 2. HTTPS Required
+
+Service Workers only work over HTTPS (except localhost for development):
+
+```
+https://yourwiki.com ✓ Works
+http://yourwiki.com  ✗ Won't work
+http://localhost     ✓ Works (development only)
+```
+
+### 3. Browser Support
+
+Browser must support Service Workers:
+- Chrome/Edge 40+
+- Firefox 44+
+- Safari 11.1+
+- Opera 27+
+
+## How It Works
+
+### Service Worker Registration
+
+The Citizen skin automatically registers a Service Worker when conditions are met:
+
+```javascript
+if (scriptPath === '' && 'serviceWorker' in navigator) {
+  const swUrl = '/load.php?modules=skins.citizen.serviceWorker' +
+                '&only=scripts&raw=true&skin=citizen&version=' + version;
+  
+  navigator.serviceWorker.register(swUrl, { scope: '/' });
+}
+```
+
+Key points:
+1. **Script path check** - Verifies `$wgScriptPath` is empty
+2. **Feature detection** - Checks for Service Worker support
+3. **Version tracking** - Uses ResourceLoader module version for cache busting
+4. **Scope** - Registers at root scope (`/`)
+
+### Service Worker Lifecycle
+
+Once registered, the Service Worker goes through a lifecycle:
+
+1. **Install** - Service Worker downloads and installs
+2. **Activate** - Service Worker activates and takes control
+3. **Fetch** - Service Worker intercepts network requests
+
+```javascript
+self.addEventListener('install', (event) => {
+  // Perform install steps
+  // TODO: Cache essential resources
+});
+
+self.addEventListener('activate', (event) => {
+  // Perform activate steps
+  // TODO: Clean up old caches
+});
+
+self.addEventListener('fetch', (event) => {
+  // Intercept fetch requests
+  // TODO: Implement caching strategies
+});
+```
+
+<Tip>
+The current implementation includes event listeners but does not yet implement caching logic. This is a foundation for future offline capabilities.
+</Tip>
+
+## Current Implementation Status
+
+### ✓ Implemented
+
+- Service Worker registration
+- Lifecycle event listeners (install, activate, fetch)
+- Scope and version management
+- Script path validation
+
+### ⏳ Planned Features
+
+- **Offline caching** - Cache pages and resources for offline access
+- **Background sync** - Queue edits when offline, sync when online
+- **Push notifications** - Notify users of wiki updates
+- **Precaching** - Cache essential pages on install
+- **Dynamic caching** - Cache pages as users visit them
+
+<Note>
+The Service Worker is registered but currently does not implement any caching or offline functionality. It serves as a foundation for future PWA features.
+</Note>
+
+## Configuration
+
+### Server Configuration
+
+#### Script Path
+
+Ensure MediaWiki is configured at root:
+
+```php
+# LocalSettings.php
+$wgScriptPath = '';
+$wgArticlePath = '/wiki/$1';
+```
+
+#### HTTPS Setup
+
+Configure your web server for HTTPS. Example for Apache:
+
+```apache
+<VirtualHost *:443>
+    ServerName yourwiki.com
+    
+    SSLEngine on
+    SSLCertificateFile /path/to/cert.pem
+    SSLCertificateKeyFile /path/to/key.pem
+    
+    # Your MediaWiki configuration
+</VirtualHost>
+```
+
+### ResourceLoader Module
+
+The Service Worker is defined in `skin.json`:
+
+```json
+{
+  "skins.citizen.serviceWorker": {
+    "targets": ["desktop", "mobile"],
+    "packageFiles": [
+      "resources/skins.citizen.serviceWorker/sw.js"
+    ]
+  }
+}
+```
+
+## Testing PWA Installation
+
+### Chrome/Edge
+
+1. Visit your wiki over HTTPS
+2. Open DevTools → Application → Service Workers
+3. Verify Service Worker is registered
+4. Check for "Install" button in address bar
+5. Click to install as app
+
+### Mobile Devices
+
+1. Visit wiki in mobile browser
+2. Look for "Add to Home Screen" option
+3. Install the app
+4. App icon appears on home screen
+5. Launch opens in standalone mode
+
+<Tip>
+Use Chrome DevTools to simulate PWA features and test Service Worker behavior during development.
+</Tip>
+
+## Future Development
+
+### Caching Strategies
+
+Potential caching strategies for implementation:
+
+#### Cache First
+Serve cached content first, fall back to network:
+```javascript
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(cached => cached || fetch(event.request))
+  );
+});
+```
+
+#### Network First
+Try network first, fall back to cache:
+```javascript
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    fetch(event.request)
+      .catch(() => caches.match(event.request))
+  );
+});
+```
+
+### Offline Page
+
+Provide a custom offline page when network is unavailable:
+
+```javascript
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    fetch(event.request)
+      .catch(() => caches.match('/offline.html'))
+  );
+});
+```
+
+## Best Practices
+
+<Tip>
+Start with a conservative caching strategy - cache static assets first, then gradually add dynamic content caching.
+</Tip>
+
+<Note>
+Be mindful of storage limits. Modern browsers typically allow 50MB+ per origin, but this varies by browser and device.
+</Note>
+
+<Tip>
+Implement cache versioning to ensure users get updated content when you deploy changes.
+</Tip>
+
+## Troubleshooting
+
+### Service Worker Not Registering
+
+**Problem:** Service Worker doesn't register  
+**Solutions:**
+1. Verify `$wgScriptPath` is empty
+2. Check that site uses HTTPS
+3. Confirm browser supports Service Workers
+4. Check browser console for errors
+
+### Installation Option Not Appearing
+
+**Problem:** No "Install App" option  
+**Solutions:**
+1. Ensure Service Worker is registered
+2. Verify site meets PWA criteria
+3. Check for manifest.json (if implemented)
+4. Test in different browser
+
+### Service Worker Not Updating
+
+**Problem:** Changes to Service Worker not applying  
+**Solutions:**
+1. Hard refresh browser (Ctrl+Shift+R)
+2. Unregister old Service Worker in DevTools
+3. Clear site data
+4. Check ResourceLoader version is incrementing
+
+## Development Resources
+
+### Chrome DevTools
+
+**Application → Service Workers**
+- View registration status
+- Manually update Service Worker
+- Unregister Service Workers
+- Simulate offline mode
+
+**Application → Cache Storage**
+- Inspect cached resources
+- Delete cache entries
+- View cache size
+
+### Testing Checklist
+
+- [ ] Service Worker registers successfully
+- [ ] HTTPS is configured
+- [ ] Script path is at root
+- [ ] Browser supports Service Workers
+- [ ] No console errors
+- [ ] Version tracking works correctly
+
+## Contributing
+
+The PWA implementation is in early stages and welcomes contributions:
+
+1. **Implement caching** - Add smart caching strategies
+2. **Offline support** - Create offline fallback pages
+3. **Background sync** - Queue actions when offline
+4. **Push notifications** - Notify users of updates
+5. **Manifest** - Add web app manifest for better PWA support
+
+See the implementation in:
+- `resources/skins.citizen.scripts/serviceWorker.js` - Registration logic
+- `resources/skins.citizen.serviceWorker/sw.js` - Service Worker code
+
+<Note>
+Refer to the [MobileFrontend extension implementation](https://gerrit.wikimedia.org/r/c/mediawiki/extensions/MobileFrontend/+/273388/) for reference on MediaWiki Service Worker patterns.
+</Note>

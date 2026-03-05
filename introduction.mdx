@@ -1,0 +1,200 @@
+---
+title: Introduction
+description: A beautiful, usable, responsive MediaWiki skin with in-depth extension support
+---
+
+# Introduction
+
+![Citizen skin screenshot](https://upload.wikimedia.org/wikipedia/commons/0/07/Screenshot-skin-citizen.png)
+
+Citizen is a beautiful, usable, responsive [MediaWiki](https://www.mediawiki.org) skin that makes [extensions](https://www.mediawiki.org/wiki/Manual:Extensions) part of the cohesive experience. Originally made for the [Star Citizen Wiki](https://starcitizen.tools), it has now been made flexible to run on various MediaWiki configurations.
+
+<Note>
+  Citizen is built on `SkinMustache` and requires MediaWiki 1.43.0 or later. It uses PHP for server-side rendering, Mustache templates for views, LESS for styling, and vanilla JavaScript/Vue 3 for client-side interactivity.
+</Note>
+
+## Key Features
+
+Unlike standard MediaWiki skins, Citizen offers a modern, feature-rich experience:
+
+### Responsive Layout
+
+The skin adapts seamlessly to different screen sizes, from mobile phones to large desktop displays. Content, navigation, and tools are intelligently repositioned to provide the best experience on each device.
+
+### Command Palette
+
+Citizen's enhanced search experience provides quick access to everything on your wiki:
+
+- **Fast search** with real-time suggestions
+- **Custom commands** for quick actions
+- **Recent items** tracking
+- **Related articles** suggestions
+- **Keyboard shortcuts** for power users
+
+<CodeGroup>
+```javascript
+// Command palette search clients are configurable
+const searchClient = SearchClientFactory.create({
+  gateway: 'mwRestApi', // or 'mwActionApi', 'smwAskApi'
+  maxResults: 10
+});
+```
+</CodeGroup>
+
+### Theme Modes
+
+Users can personalize their experience by choosing between:
+
+- **Light mode** - Clean, bright interface
+- **Dark mode** - Easy on the eyes
+- **Auto** - Matches system preferences
+- **Pure black mode** - True OLED black for energy savings
+
+```php
+// Set the default theme in LocalSettings.php
+$wgCitizenThemeDefault = 'auto'; // 'light', 'dark', or 'auto'
+```
+
+### Extensible Preferences
+
+Let users customize their experience with an extensible preferences system:
+
+- Font size control (small, standard, large, x-large)
+- Page width options (standard, wide, full)
+- Navigation auto-hide behavior
+- Performance mode
+- Image dimming in dark mode
+
+Gadgets and on-wiki JSON can register custom preferences at runtime.
+
+### Collapsible Sections
+
+Long articles become more navigable with collapsible sections. Users can expand and collapse content sections to focus on what they need.
+
+```php
+// Enable collapsible sections
+$wgCitizenEnableCollapsibleSections = true;
+```
+
+### Persistent Table of Contents
+
+A sticky table of contents follows users as they scroll, providing:
+
+- Always-accessible navigation
+- Visual progress indicator
+- Quick jumps to any section
+- Auto-collapse for long documents (configurable threshold)
+
+### Progressive Web App
+
+With web app manifest support, users can install your wiki to their home screen for an app-like experience:
+
+```php
+// Enable PWA features
+$wgCitizenEnableManifest = true;
+$wgCitizenManifestOptions = [
+    'background_color' => '#0d0e12',
+    'theme_color' => '#0d0e12',
+    'short_name' => 'My Wiki',
+    'description' => 'A wiki powered by Citizen',
+    'icons' => [
+        [
+            'src' => 'https://example.com/icon-192.png',
+            'sizes' => '192x192',
+            'type' => 'image/png'
+        ]
+    ]
+];
+```
+
+### Extension Support
+
+Citizen provides custom styling for over 70 popular MediaWiki extensions, ensuring a cohesive experience across:
+
+- **VisualEditor** - Modern editing interface
+- **Echo** - Notifications
+- **CodeMirror** - Syntax highlighting
+- **Semantic MediaWiki** - Semantic data management
+- **TabberNeue** - Tab interfaces
+- **Cargo** - Data storage and querying
+- **Popups** - Hover previews
+- And many more...
+
+<Warning>
+  Extension skin styles are automatically loaded when the corresponding extensions are installed. No additional configuration is required.
+</Warning>
+
+## Architecture
+
+Citizen is built with modern MediaWiki best practices:
+
+### Server-Side
+
+```php
+// Main skin class extending SkinMustache
+class SkinCitizen extends SkinMustache {
+    public function __construct( array $options = [] ) {
+        $options['name'] = 'citizen';
+        $options['responsive'] = true;
+        $options['templateSectionLinks'] = 'SectionLinks';
+        parent::__construct( $options );
+    }
+}
+```
+
+### Client-Side
+
+Citizen uses a modular ResourceLoader-based architecture:
+
+- **CommonJS modules** for JavaScript (`require()` / `module.exports`)
+- **Vue 3 Composition API** for reactive components
+- **Codex** design system components (bundled with MediaWiki 1.43+)
+- **Pinia** for state management in the command palette
+
+### Styling
+
+```less
+// CSS custom properties preferred over LESS variables
+.my-component {
+    color: var(--color-base);
+    background: var(--background-color-base);
+    padding: var(--space-md);
+}
+```
+
+All design tokens are defined in `tokens-citizen.less` and available throughout the skin.
+
+## Browser Compatibility
+
+Citizen supports modern evergreen browsers:
+
+- Chrome/Edge (last 2 versions)
+- Firefox (last 2 versions)
+- Safari (last 2 versions)
+- Mobile browsers on iOS and Android
+
+## Community
+
+Citizen is an open-source project built by the community:
+
+- [GitHub Repository](https://github.com/StarCitizenTools/mediawiki-skins-Citizen)
+- [Live Demo](https://starcitizen.tools)
+- [User Showcase](https://starcitizentools.github.io/mediawiki-skins-Citizen/community/showcase/)
+- [MediaWiki.org Documentation](https://www.mediawiki.org/wiki/Skin:Citizen)
+
+<Note>
+  Citizen is licensed under GPL-3.0-or-later and is maintained by [alistair3149](https://github.com/alistair3149) and [Octfx](https://github.com/octfx), with contributions from the community.
+</Note>
+
+## Next Steps
+
+Ready to install Citizen on your wiki?
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Get Citizen installed on your MediaWiki site
+  </Card>
+  <Card title="Requirements" icon="check" href="/requirements">
+    Check system requirements and compatibility
+  </Card>
+</CardGroup>

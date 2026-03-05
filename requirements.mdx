@@ -1,0 +1,502 @@
+---
+title: Requirements
+description: System requirements and compatibility information for the Citizen MediaWiki skin
+---
+
+# Requirements
+
+Before installing Citizen, ensure your environment meets these requirements.
+
+## MediaWiki Version
+
+Citizen requires a modern version of MediaWiki to take advantage of the latest features and APIs.
+
+<Note>
+  **Current requirement**: MediaWiki 1.43.0 or later
+</Note>
+
+This requirement is defined in `skin.json`:
+
+```json skin.json
+{
+  "name": "Citizen",
+  "version": "3.14.0",
+  "requires": {
+    "MediaWiki": ">= 1.43.0"
+  }
+}
+```
+
+### Why MediaWiki 1.43.0?
+
+Citizen leverages features introduced in recent MediaWiki versions:
+
+- **SkinMustache** - The modern skin base class
+- **Codex v1.14.0+** - Design system components used throughout the skin
+- **ResourceLoader improvements** - Better module loading and dependency management
+- **Modern PHP features** - Type declarations, native types, and strict typing
+- **Vue 3 support** - For reactive components like the command palette
+
+## Legacy Versions
+
+If you're running an older version of MediaWiki, you can use a legacy version of Citizen:
+
+<Warning>
+  Legacy versions receive limited support. Consider upgrading MediaWiki to use the latest Citizen features.
+</Warning>
+
+| Citizen Version | MediaWiki Version | Status |
+| :-------------- | :---------------- | :----- |
+| **3.x (latest)** | 1.43.0+ | ✅ Actively developed |
+| [2.40.2](https://github.com/StarCitizenTools/mediawiki-skins-Citizen/releases/tag/v2.40.2) | 1.39.4 – 1.42.7 | ⚠️ Legacy support |
+| [1.17.9](https://github.com/StarCitizenTools/mediawiki-skins-Citizen/releases/tag/v1.17.9) | 1.35.2 – 1.39.3 | ⚠️ Legacy support |
+
+### Installing Legacy Versions
+
+<Tabs>
+  <Tab title="Manual">
+    Download the specific release:
+
+    ```bash
+    # For MediaWiki 1.39.4 - 1.42.7
+    wget https://github.com/StarCitizenTools/mediawiki-skins-Citizen/archive/refs/tags/v2.40.2.zip
+    unzip v2.40.2.zip
+    mv mediawiki-skins-Citizen-2.40.2 skins/Citizen
+    ```
+  </Tab>
+
+  <Tab title="Git">
+    Clone and check out the specific tag:
+
+    ```bash
+    git clone https://github.com/StarCitizenTools/mediawiki-skins-Citizen.git skins/Citizen
+    cd skins/Citizen
+    git checkout v2.40.2  # Or v1.17.9 for older MW versions
+    ```
+  </Tab>
+
+  <Tab title="Composer">
+    Specify the version in your `composer.local.json`:
+
+    ```json composer.local.json
+    {
+      "require": {
+        "starcitizentools/citizen-skin": "2.40.2"
+      }
+    }
+    ```
+
+    Then run:
+
+    ```bash
+    composer update --no-dev
+    ```
+  </Tab>
+</Tabs>
+
+## PHP Requirements
+
+Citizen follows MediaWiki's PHP requirements:
+
+- **PHP 7.4.3+** for MediaWiki 1.39.x
+- **PHP 8.0+** for MediaWiki 1.40.x - 1.42.x
+- **PHP 8.1+** for MediaWiki 1.43.0+ (current)
+
+### PHP Extensions
+
+All extensions required by MediaWiki are sufficient for Citizen:
+
+- `json` - For JSON encoding/decoding
+- `mbstring` - For Unicode string handling
+- `xml` - For XML parsing
+
+<Note>
+  Citizen uses `declare(strict_types=1)` in all PHP files and requires strict type support.
+</Note>
+
+## Server Requirements
+
+### Web Server
+
+Any web server supported by MediaWiki works with Citizen:
+
+- Apache 2.4+
+- Nginx 1.20+
+- LiteSpeed
+- IIS 10+
+
+### Database
+
+Citizen doesn't add any database requirements beyond MediaWiki's:
+
+- MySQL 5.7.0+ or MariaDB 10.3+
+- PostgreSQL 10+
+- SQLite 3.8.0+
+
+## Client Requirements (Browser Support)
+
+Citizen is built for modern web browsers and does not support Internet Explorer.
+
+### Supported Browsers
+
+<CardGroup cols={2}>
+  <Card title="Desktop Browsers" icon="desktop">
+    - Chrome/Edge 90+
+    - Firefox 88+
+    - Safari 14+
+    - Opera 76+
+  </Card>
+  <Card title="Mobile Browsers" icon="mobile">
+    - Chrome for Android
+    - Safari for iOS 14+
+    - Firefox for Android
+    - Samsung Internet
+  </Card>
+</CardGroup>
+
+### Browser Features Required
+
+Citizen uses modern web features:
+
+- **CSS Custom Properties** (CSS variables)
+- **ES6 JavaScript** (arrow functions, const/let, classes)
+- **Fetch API** (for AJAX requests)
+- **IntersectionObserver** (for scroll-based features)
+- **ResizeObserver** (for responsive elements)
+- **localStorage** (for preferences)
+- **Service Workers** (optional, for PWA features)
+
+<Warning>
+  Citizen uses the `es6: true` flag for some ResourceLoader modules and requires ES6 support in browsers.
+</Warning>
+
+### Browser Compatibility Configuration
+
+The skin's ESLint configuration defines compatibility:
+
+```json .eslintrc.json
+{
+  "extends": [
+    "wikimedia",
+    "plugin:compat/recommended"
+  ],
+  "env": {
+    "browser": true,
+    "es6": true
+  }
+}
+```
+
+## Dependencies
+
+Citizen's dependencies are automatically managed by MediaWiki's ResourceLoader.
+
+### PHP Dependencies
+
+Defined in `composer.json`:
+
+```json composer.json
+{
+  "require": {
+    "composer/installers": "^2|^1.0.1"
+  }
+}
+```
+
+### JavaScript Dependencies
+
+All JavaScript dependencies are provided by MediaWiki or bundled with Citizen:
+
+#### MediaWiki Core Modules
+
+- `mediawiki.storage` - LocalStorage abstraction
+- `mediawiki.util` - Utility functions
+- `mediawiki.api` - API client
+- `mediawiki.page.ready` - Page ready state
+
+#### Codex Components
+
+From MediaWiki 1.43.0's bundled Codex (v1.14.0+):
+
+```json
+{
+  "codexComponents": [
+    "CdxButton",
+    "CdxIcon",
+    "CdxCheckbox",
+    "CdxField",
+    "CdxRadio",
+    "CdxSelect",
+    "CdxToggleSwitch",
+    "CdxTextInput",
+    "CdxThumbnail",
+    "CdxSearchResultTitle"
+  ]
+}
+```
+
+<Note>
+  Citizen uses the Codex version bundled with your MediaWiki installation. The minimum is v1.14.0 (bundled with MW 1.43), but newer MW versions may provide a newer Codex.
+</Note>
+
+#### Vue and Pinia
+
+- **Vue 3.4.27+** - For reactive components
+- **Pinia 2.0.16+** - For state management in the command palette
+
+Both are provided by MediaWiki's ResourceLoader.
+
+## Optional Enhancements
+
+These extensions are not required but enhance Citizen's features.
+
+### Recommended Extensions
+
+<AccordionGroup>
+  <Accordion title="PageImages (bundled with MediaWiki)">
+    Adds thumbnail images to search suggestion results.
+
+    ```php LocalSettings.php
+    wfLoadExtension( 'PageImages' );
+    ```
+
+    When installed, search results will show page images alongside titles and descriptions.
+  </Accordion>
+
+  <Accordion title="TextExtracts (bundled with MediaWiki)">
+    Provides short text descriptions for search suggestions.
+
+    ```php LocalSettings.php
+    wfLoadExtension( 'TextExtracts' );
+    $wgCitizenSearchDescriptionSource = 'textextracts';
+    ```
+  </Accordion>
+
+  <Accordion title="ShortDescription">
+    Adds short descriptions under page titles and in search results.
+
+    ```php LocalSettings.php
+    wfLoadExtension( 'ShortDescription' );
+    $wgCitizenSearchDescriptionSource = 'wikidata';
+    ```
+
+    [Install from MediaWiki.org](https://www.mediawiki.org/wiki/Extension:ShortDescription)
+  </Accordion>
+
+  <Accordion title="TemplateStylesExtender">
+    Allows CSS variables in TemplateStyles, including Citizen's design tokens.
+
+    ```php LocalSettings.php
+    wfLoadExtension( 'TemplateStylesExtender' );
+    ```
+
+    This lets wiki editors use Citizen's CSS variables in template styles:
+
+    ```css
+    .my-template {
+        color: var(--color-base);
+        background: var(--background-color-base);
+    }
+    ```
+
+    [Install from MediaWiki.org](https://www.mediawiki.org/wiki/Extension:TemplateStylesExtender)
+  </Accordion>
+</AccordionGroup>
+
+### Styled Extensions
+
+Citizen includes custom skin styles for 70+ MediaWiki extensions. These are automatically applied when the extensions are installed:
+
+<CardGroup cols={3}>
+  <Card title="VisualEditor" icon="edit">
+    Modern WYSIWYG editing
+  </Card>
+  <Card title="Echo" icon="bell">
+    Notification system
+  </Card>
+  <Card title="CodeMirror" icon="code">
+    Syntax highlighting editor
+  </Card>
+  <Card title="Semantic MediaWiki" icon="brain">
+    Semantic data management
+  </Card>
+  <Card title="TabberNeue" icon="window-restore">
+    Tab interfaces
+  </Card>
+  <Card title="Cargo" icon="database">
+    Data storage and querying
+  </Card>
+  <Card title="Popups" icon="window-maximize">
+    Hover page previews
+  </Card>
+  <Card title="MultimediaViewer" icon="image">
+    Enhanced image viewing
+  </Card>
+  <Card title="DiscussionTools" icon="comments">
+    Modern discussion interface
+  </Card>
+</CardGroup>
+
+<Note>
+  For a complete list of supported extensions, see the [Extension Support page](https://starcitizentools.github.io/mediawiki-skins-Citizen/config/extensions) or the README on GitHub.
+</Note>
+
+## Development Requirements
+
+If you plan to contribute to Citizen or customize its source code, you'll need:
+
+### Node.js and npm
+
+- **Node.js 18+**
+- **npm 9+**
+
+Used for building assets and running tests:
+
+```json package.json
+{
+  "scripts": {
+    "lint": "npm -s run lint:js && npm -s run lint:styles && npm -s run lint:i18n && npm -s run lint:md",
+    "test": "vitest run",
+    "preflight": "npm run lint && npm test"
+  }
+}
+```
+
+### PHP Development Tools
+
+For PHP linting and testing:
+
+```bash
+composer install  # Installs dev dependencies
+composer test     # Run linters
+composer phan     # Static analysis
+composer phpunit  # Run tests
+composer preflight # All checks
+```
+
+### Development Dependencies
+
+<Tabs>
+  <Tab title="PHP">
+    ```json composer.json
+    {
+      "require-dev": {
+        "mediawiki/mediawiki-codesniffer": "50.0.0",
+        "mediawiki/mediawiki-phan-config": "0.19.0",
+        "mediawiki/minus-x": "2.0.1",
+        "php-parallel-lint/php-parallel-lint": "1.4.0"
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="JavaScript">
+    ```json package.json
+    {
+      "devDependencies": {
+        "eslint": "8.57.1",
+        "eslint-config-wikimedia": "0.32.3",
+        "stylelint": "17.4.0",
+        "vitest": "^4.0.18",
+        "@vue/test-utils": "^2.4.6"
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Docker Development Environment
+
+The recommended development setup uses MediaWiki's Docker environment:
+
+```bash
+# From the MediaWiki root
+docker compose up -d
+docker compose exec mediawiki bash -c "cd /var/www/html/w/skins/Citizen && composer preflight"
+```
+
+<Note>
+  For detailed development setup instructions, see [AGENTS.md](https://github.com/StarCitizenTools/mediawiki-skins-Citizen/blob/main/AGENTS.md) in the repository.
+</Note>
+
+## Performance Considerations
+
+Citizen is designed for good performance, but some features have resource implications:
+
+### ResourceLoader Modules
+
+Citizen loads several ResourceLoader modules:
+
+- **skins.citizen.styles** - Base styles (~50KB minified)
+- **skins.citizen.scripts** - Core JavaScript (~30KB minified)
+- **skins.citizen.search** or **skins.citizen.commandPalette** - Search functionality
+- **skins.citizen.preferences** - User preferences panel (loaded on demand)
+
+### CDN and Caching
+
+Ensure your MediaWiki installation has proper caching configured:
+
+```php LocalSettings.php
+// Enable file cache for anonymous users
+$wgUseFileCache = true;
+$wgFileCacheDirectory = "{$IP}/cache";
+
+// CDN/reverse proxy
+$wgUseCdn = true;
+$wgCdnServers = [ '127.0.0.1' ]; // Your CDN/proxy IPs
+
+// Resource loader cache
+$wgResourceLoaderMaxage = [
+    'versioned' => 30 * 24 * 60 * 60, // 30 days
+    'unversioned' => 5 * 60 // 5 minutes
+];
+```
+
+### Progressive Web App
+
+PWA features add a service worker (~5KB):
+
+```php LocalSettings.php
+$wgCitizenEnableManifest = true; // Adds ~2KB manifest.json
+```
+
+## Checking Your Environment
+
+To verify your environment meets all requirements:
+
+<Steps>
+  <Step title="Check MediaWiki version">
+    Visit `Special:Version` on your wiki and verify MediaWiki version is 1.43.0+
+  </Step>
+
+  <Step title="Check PHP version">
+    ```bash
+    php -v
+    ```
+
+    Should show PHP 8.1.0 or later.
+  </Step>
+
+  <Step title="Verify file permissions">
+    ```bash
+    ls -la skins/Citizen/
+    ```
+
+    The web server user (e.g., `www-data`, `apache`) must be able to read all files.
+  </Step>
+
+  <Step title="Test in browser">
+    Visit your wiki and check browser console (F12) for any errors.
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Install Citizen" icon="download" href="/installation">
+    Ready to install? Follow the installation guide
+  </Card>
+  <Card title="View Demo" icon="eye" href="https://starcitizen.tools">
+    See Citizen in action on the Star Citizen Wiki
+  </Card>
+</CardGroup>

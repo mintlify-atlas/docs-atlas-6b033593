@@ -1,0 +1,457 @@
+---
+title: Adding Extension Support
+description: Step-by-step guide to adding skinStyles for new MediaWiki extensions in Citizen
+---
+
+This guide walks you through adding custom skinStyles for a MediaWiki extension that isn't yet supported by Citizen.
+
+## Prerequisites
+
+Before you begin:
+
+- Install the extension on your MediaWiki instance
+- Activate the Citizen skin
+- Identify which pages/features of the extension need styling adjustments
+- Set up a development environment (see [AGENTS.md](https://github.com/StarCitizenTools/mediawiki-skins-Citizen/blob/main/AGENTS.md))
+
+## Step 1: Identify Extension ResourceLoader Modules
+
+First, determine which ResourceLoader modules the extension uses for its styling:
+
+1. Visit a page where the extension is active
+2. Open browser DevTools and check the `<head>` for loaded stylesheets
+3. Look for module names in the format `ext.ExtensionName.*`
+4. Check the extension's `extension.json` file under `ResourceModules`
+
+### Example
+
+For Extension:Echo, you might find modules like:
+- `ext.echo.styles.badge`
+- `ext.echo.styles.notifications`
+- `ext.echo.ui`
+- `ext.echo.special`
+
+## Step 2: Create the SkinStyles Directory
+
+Create a directory for your extension's skinStyles:
+
+```bash
+cd skins/Citizen/skinStyles/extensions/
+mkdir YourExtension
+```
+
+Use the extension's actual name (matching its directory in `extensions/`).
+
+## Step 3: Create LESS Files
+
+For each ResourceLoader module you want to style, create a corresponding `.less` file:
+
+```bash
+touch skinStyles/extensions/YourExtension/ext.yourExtension.module1.less
+touch skinStyles/extensions/YourExtension/ext.yourExtension.module2.less
+```
+
+The filename should match the module name with `.less` appended.
+
+### File Structure
+
+Start each file with a header comment:
+
+```less
+/*
+ * Citizen
+ *
+ * SkinStyles for Extension:YourExtension
+ * Module: ext.yourExtension.module1
+ * Version: REL1_43 (or specific git hash)
+ *
+ * Date: YYYY-MM-DD
+ */
+```
+
+## Step 4: Write the Styles
+
+### Import Citizen Resources
+
+Import Citizen's variables or mixins as needed:
+
+```less
+@import '../../../resources/variables.less';  // For LESS variables and mixins
+@import '../../../resources/mixins.less';     // For mixins only
+```
+
+### Use CSS Custom Properties
+
+**Always prefer CSS custom properties** over LESS variables for theming:
+
+```less
+// ✅ Good - uses CSS custom properties (theme-aware)
+.your-element {
+  color: var( --color-emphasized );
+  background-color: var( --color-surface-1 );
+  border-color: var( --border-color-base );
+  border-radius: var( --border-radius-base );
+}
+
+// ❌ Bad - hardcoded colors (not theme-aware)
+.your-element {
+  color: #000;
+  background-color: #fff;
+  border: 1px solid #ccc;
+}
+```
+
+### Common CSS Custom Properties
+
+| Property | Purpose |
+|----------|----------|
+| `--color-surface-0` | Main background color |
+| `--color-surface-1` | Elevated surface (cards, panels) |
+| `--color-surface-2` | Higher elevation (dropdowns, tooltips) |
+| `--color-emphasized` | Primary text color |
+| `--color-subtle` | Secondary/muted text |
+| `--color-progressive` | Accent color (links, primary actions) |
+| `--color-destructive` | Error/delete actions |
+| `--border-color-base` | Standard border color |
+| `--border-radius-base` | Standard border radius |
+| `--space-xs`, `--space-sm`, etc. | Spacing tokens |
+| `--font-family-base` | Body text font |
+| `--font-family-monospace` | Code font |
+
+For a complete list, see `resources/tokens-citizen.less` in the Citizen repository.
+
+### Example: Styling a Button
+
+```less
+/*
+ * Citizen
+ *
+ * SkinStyles for Extension:MyExtension
+ * Module: ext.myExtension.buttons
+ * Version: REL1_43
+ *
+ * Date: 2026-03-05
+ */
+
+@import '../../../resources/variables.less';
+
+.my-extension-button {
+  padding: var( --space-xs ) var( --space-sm );
+  color: var( --color-emphasized );
+  background-color: var( --color-surface-1 );
+  border: var( --border-width-base ) solid var( --border-color-base );
+  border-radius: var( --border-radius-base );
+  font-family: var( --font-family-base );
+  cursor: pointer;
+  transition: background-color 100ms;
+
+  &:hover {
+    background-color: var( --background-color-button-quiet--hover );
+  }
+
+  &:active {
+    background-color: var( --background-color-button-quiet--active );
+  }
+}
+```
+
+## Step 5: Register in skin.json
+
+Open `skin.json` and add entries to the `ResourceModuleSkinStyles` section:
+
+```json
+"ResourceModuleSkinStyles": {
+  "citizen": {
+    // ... existing entries ...
+    "+ext.yourExtension.module1": "skinStyles/extensions/YourExtension/ext.yourExtension.module1.less",
+    "+ext.yourExtension.module2": "skinStyles/extensions/YourExtension/ext.yourExtension.module2.less"
+  }
+}
+```
+
+### The `+` Prefix
+
+The `+` prefix is **critical**—it tells MediaWiki to **append** your styles to the extension's original styles rather than replacing them:
+
+- **With `+`**: `extension.css` + `yourSkinStyles.css` (appended)
+- **Without `+`**: Only `yourSkinStyles.css` (replaced)
+
+Almost always use the `+` prefix unless you're intentionally replacing all extension styles.
+
+### Alphabetical Order
+
+<Note>
+  Keep entries alphabetically sorted by module name for maintainability. Insert your new entries in the correct alphabetical position.
+</Note>
+
+## Step 6: Test Your Changes
+
+### Clear Caches
+
+```bash
+# MediaWiki action API
+php maintenance/rebuildLocalisationCache.php
+
+# MediaWiki core
+php maintenance/run.php update.php --quick
+
+# If using Docker
+docker compose exec mediawiki php maintenance/run.php update.php --quick
+```
+
+### Browser Testing
+
+1. Hard refresh your browser (Ctrl+Shift+R / Cmd+Shift+R)
+2. Test in both light and dark modes (use Citizen's theme switcher)
+3. Check responsive behavior (mobile, tablet, desktop viewports)
+4. Verify all interactive states (hover, active, focus, disabled)
+5. Open browser console and check for CSS errors or warnings
+
+### Test Multiple Scenarios
+
+- Test with the extension enabled and disabled
+- Test on different page types (articles, special pages, edit pages)
+- Test with other extensions that might interact with yours
+- Check for visual conflicts with other skinStyles
+
+## Step 7: Run Linters
+
+Before committing, run style checks:
+
+```bash
+# Lint LESS files
+npm run lint:styles
+
+# Auto-fix style issues
+npm run lint:fix:styles
+```
+
+Fix any errors or warnings reported by the linter.
+
+## Step 8: Document Your Changes
+
+Update the README.md to include the new extension in the supported list:
+
+```markdown
+| [YourExtension](https://www.mediawiki.org/wiki/Extension:YourExtension) | REL1_43 `abc123` |
+```
+
+Include:
+- Extension name with link to MediaWiki.org
+- MediaWiki version or git hash you tested against
+
+## Step 9: Submit a Pull Request
+
+1. Create a new branch:
+   ```bash
+   git checkout -b add-support-for-extension-name
+   ```
+
+2. Commit your changes:
+   ```bash
+   git add .
+   git commit -m "feat: add skinStyles for Extension:YourExtension"
+   ```
+
+3. Push and create a PR on GitHub:
+   ```bash
+   git push origin add-support-for-extension-name
+   ```
+
+4. In your PR description:
+   - List which extension and version you tested
+   - Include before/after screenshots
+   - Mention any known issues or limitations
+   - Link to the extension on MediaWiki.org
+
+## Advanced Topics
+
+### Handling Multiple Extension Versions
+
+If an extension has breaking UI changes between versions:
+
+1. Document the tested version in the file header
+2. Add version-specific overrides if needed
+3. Note compatibility in PR description
+
+### Working with JavaScript-Heavy Extensions
+
+Some extensions dynamically inject HTML/CSS:
+
+1. Use browser DevTools to inspect the rendered DOM
+2. Target dynamically-added classes in your LESS
+3. Use `!important` sparingly and only when necessary to override inline styles
+4. Consider timing issues (elements added after page load)
+
+### Responsive Design
+
+Use Citizen's breakpoint variables:
+
+```less
+@import '../../../resources/variables.less';
+
+.my-element {
+  // Mobile-first base styles
+  display: block;
+
+  // Tablet and up
+  @media ( min-width: @min-width-breakpoint-tablet ) {
+    display: flex;
+  }
+
+  // Desktop and up
+  @media ( min-width: @min-width-breakpoint-desktop ) {
+    max-width: 1200px;
+  }
+}
+```
+
+Available breakpoints:
+- `@min-width-breakpoint-tablet`
+- `@min-width-breakpoint-desktop`
+- `@max-width-breakpoint-mobile`
+- `@max-width-breakpoint-tablet`
+
+### Supporting Third-Party Libraries
+
+If an extension uses a library (Leaflet, DataTables, etc.):
+
+1. Create a reusable LESS file in `skinStyles/lib/`:
+   ```bash
+   skinStyles/lib/leaflet/leaflet.less
+   ```
+
+2. Register it once in `skin.json`:
+   ```json
+   "+ext.maps.leaflet.library": "skinStyles/lib/leaflet/leaflet.less",
+   "+ext.kartographer.style": "skinStyles/lib/leaflet/leaflet.less",
+   "+ext.datamaps.leaflet": "skinStyles/lib/leaflet/leaflet.less"
+   ```
+
+3. Multiple extensions can reference the same library skinStyles
+
+## Common Patterns
+
+### Hide Elements
+
+```less
+// Use Citizen's screen-reader-only mixin
+@import '../../../resources/mixins.less';
+
+.element-to-hide {
+  .mixin-citizen-screen-reader-only;
+}
+
+// Or simply hide completely
+.element-to-remove {
+  display: none;
+}
+```
+
+### Fix Z-Index Issues
+
+```less
+@import '../../../resources/variables.less';
+
+.my-overlay {
+  z-index: @z-index-overlay;  // 100
+}
+
+.my-dropdown {
+  z-index: @z-index-dropdown; // 50
+}
+
+.my-sticky-header {
+  z-index: @z-index-sticky;   // 10
+}
+```
+
+### Style Form Elements
+
+```less
+input[type="text"],
+input[type="email"],
+textarea {
+  padding: var( --space-xs );
+  color: var( --color-emphasized );
+  background-color: var( --color-surface-0 );
+  border: var( --border-width-base ) solid var( --border-color-base );
+  border-radius: var( --border-radius-base );
+
+  &:focus {
+    border-color: var( --color-progressive );
+    outline: 0;
+    box-shadow: 0 0 0 1px var( --color-progressive );
+  }
+}
+```
+
+### Dark Mode Considerations
+
+If you use CSS custom properties correctly, dark mode support is automatic. However, if you need mode-specific overrides:
+
+```less
+// Automatic via custom properties (preferred)
+.element {
+  color: var( --color-emphasized ); // Automatically switches with theme
+}
+
+// Manual override (avoid unless necessary)
+html.skin-citizen-dark .element {
+  // Dark mode specific styles
+}
+```
+
+## Troubleshooting
+
+### Styles Not Applying
+
+1. Clear MediaWiki cache: `php maintenance/run.php update.php --quick`
+2. Hard refresh browser (Ctrl+Shift+R)
+3. Check browser DevTools → Network tab for 404 errors
+4. Verify `skin.json` syntax (JSON must be valid)
+5. Check that module names match exactly
+
+### Specificity Issues
+
+If your styles are being overridden:
+
+1. Increase specificity by chaining classes:
+   ```less
+   // Low specificity
+   .button { }
+
+   // Higher specificity
+   .my-extension .button { }
+   ```
+
+2. Use `!important` as a last resort:
+   ```less
+   .element {
+     color: var( --color-emphasized ) !important;
+   }
+   ```
+
+### Extension Styles Not Loading
+
+If the extension itself isn't loading styles:
+
+1. Verify the extension is installed and enabled in `LocalSettings.php`
+2. Check the extension's `extension.json` declares the module
+3. Run `php maintenance/run.php update.php` to register new modules
+
+## Resources
+
+- [Citizen GitHub Repository](https://github.com/StarCitizenTools/mediawiki-skins-Citizen)
+- [MediaWiki ResourceLoader Documentation](https://www.mediawiki.org/wiki/ResourceLoader)
+- [MediaWiki Skin Development](https://www.mediawiki.org/wiki/Manual:Skin_development)
+- [Citizen Design Tokens](https://github.com/StarCitizenTools/mediawiki-skins-Citizen/blob/main/resources/tokens-citizen.less)
+- [Existing SkinStyles Examples](https://github.com/StarCitizenTools/mediawiki-skins-Citizen/tree/main/skinStyles/extensions)
+
+## Getting Help
+
+- Open an [issue on GitHub](https://github.com/StarCitizenTools/mediawiki-skins-Citizen/issues) for bugs
+- Ask questions in the [discussion forum](https://github.com/StarCitizenTools/mediawiki-skins-Citizen/discussions)
+- Check existing skinStyles for similar extensions as reference
+
+Happy styling! 🎨

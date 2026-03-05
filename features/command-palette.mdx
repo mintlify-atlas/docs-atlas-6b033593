@@ -1,0 +1,180 @@
+---
+title: "Command Palette"
+description: "Quick search and navigation tool for accessing pages, actions, and commands"
+---
+
+## Overview
+
+The Command Palette is a powerful quick-access tool that provides instant search and navigation across your wiki. It combines search functionality with keyboard-driven commands, allowing users to quickly find pages, perform actions, and navigate namespaces without leaving the keyboard.
+
+<Note>
+The Command Palette is automatically enabled when configured in the Citizen skin.
+</Note>
+
+## Features
+
+- **Unified search**: Search for pages, users, and media files
+- **Recent items**: Quick access to recently visited pages
+- **Related articles**: Discover content related to the current page
+- **Command system**: Execute actions using slash commands
+- **Keyboard-first navigation**: Fully keyboard-accessible interface
+- **Smart suggestions**: Context-aware recommendations
+
+## How to Use
+
+### Opening the Command Palette
+
+Click the search button in the header to open the Command Palette. The palette appears as a centered overlay with a search input field.
+
+### Basic Search
+
+Simply start typing to search for pages. The Command Palette will display:
+- Search results matching your query
+- Page titles, descriptions, and thumbnails
+- Result count and type indicators
+
+### Keyboard Shortcuts
+
+The Command Palette supports full keyboard navigation:
+
+| Key | Action |
+|-----|--------|
+| `↑` / `↓` | Navigate between results |
+| `Enter` | Select the highlighted item |
+| `Esc` | Close the Command Palette |
+| `→` | Focus on item actions (when available) |
+| `Home` | Jump to first result |
+| `End` | Jump to last result |
+
+## Special Commands
+
+The Command Palette includes several special command prefixes:
+
+### Slash Commands (`/`)
+
+Type `/` to see all available commands:
+- `/fulltext` - Search the full text of all pages
+- `/media` - Search for media files
+- `/edit` - Create or edit a page
+
+### User Search (`@`)
+
+Type `@` followed by a username to search for users:
+```
+@username
+```
+
+### Namespace Search (`:`)
+
+Type `:` to search within a specific namespace:
+```
+:Template:InfoBox
+:Help:Getting Started
+```
+
+### Template Search (`{{`)
+
+Type `{{` to search for templates:
+```
+{{Cite web
+{{Infobox
+```
+
+### Action Commands (`>`)
+
+Type `>` to see a list of available actions you can perform on the current page.
+
+## Pre-search Results
+
+When the Command Palette is opened without a search query, it displays:
+
+### Recent Items
+
+A list of recently visited pages, stored locally in your browser. Each recent item includes:
+- Page title and icon
+- Quick dismiss action (×)
+- Click to navigate
+
+### Related Articles
+
+Articles related to the current page, helping you discover connected content.
+
+## Result Types
+
+The Command Palette categorizes results with visual indicators:
+
+- **Page** - Regular wiki pages
+- **Action** - Executable actions
+- **Namespace** - Namespace-specific searches
+- **Command** - System commands
+- **Special page** - MediaWiki special pages
+- **Menu item** - Navigation menu items
+- **User** - User profile pages
+
+## Item Actions
+
+Some results include additional actions accessible via:
+- Clicking action buttons
+- Pressing `→` when an item is highlighted
+- Arrow keys to navigate between actions
+
+Example actions:
+- **Dismiss** - Remove from recent items
+- **Navigate** - Go to a specific URL or page section
+
+## Configuration
+
+The Command Palette is configured through MediaWiki's ResourceLoader system. In `skin.json`, it's registered as the `skins.citizen.commandPalette` module.
+
+### For Administrators
+
+The Command Palette automatically integrates with:
+- Your wiki's search backend (MediaWiki REST API)
+- Extension-provided commands and actions
+- Custom navigation structures
+
+<Tip>
+The Command Palette stores recent items in browser localStorage, so they persist across sessions but are device-specific.
+</Tip>
+
+## Technical Details
+
+### Implementation
+
+The Command Palette is built with:
+- **Vue 3** with Composition API
+- **Pinia** for state management
+- **MediaWiki REST API** for search
+- Modular provider system for extensibility
+
+### Search Providers
+
+The palette uses multiple providers to fetch results:
+- `SearchProvider` - Page search results
+- `RecentItemsProvider` - Recently visited pages
+- `RelatedArticlesProvider` - Related content
+- `CommandProvider` - Slash commands
+- `QueryActionProvider` - Special actions
+
+### Extending with Custom Commands
+
+Developers can add custom commands by registering them in the command registry. See the implementation in `resources/skins.citizen.commandPalette/commands/` for examples.
+
+## Best Practices
+
+<Tip>
+Encourage users to learn keyboard shortcuts - they make navigation significantly faster than using a mouse.
+</Tip>
+
+<Note>
+The Command Palette is designed to be the primary navigation tool. Consider featuring it prominently in your wiki's documentation.
+</Note>
+
+## Accessibility
+
+The Command Palette follows accessibility best practices:
+- Full keyboard navigation support
+- ARIA attributes for screen readers
+- Focus management and visual indicators
+- Escape key support for closing
+- Reduced motion support for animations

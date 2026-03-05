@@ -1,0 +1,337 @@
+---
+title: ApiWebappManifest
+description: API endpoint for generating Progressive Web App manifest
+---
+
+## Overview
+
+`ApiWebappManifest` provides a MediaWiki API action (`action=appmanifest`) that generates a [Web App Manifest](https://www.w3.org/TR/appmanifest/) for Progressive Web App (PWA) support.
+
+**Namespace:** `MediaWiki\Skins\Citizen\Api`
+
+**Location:** `includes/Api/ApiWebappManifest.php`
+
+**Based on:** MobileFrontend extension implementation
+
+**Task:** [T282500](https://phabricator.wikimedia.org/T282500) - This should eventually be merged to MediaWiki core
+
+## Constructor
+
+The API module uses dependency injection for required services.
+
+```php
+public function __construct(
+    ApiMain $main,
+    string $moduleName,
+    Language $contentLanguage,
+    HttpRequestFactory $httpRequestFactory,
+    UrlUtils $urlUtils
+)
+```
+
+<ParamField path="main" type="ApiMain" required>
+  Main API object
+</ParamField>
+
+<ParamField path="moduleName" type="string" required>
+  Name of this API module (typically 'appmanifest')
+</ParamField>
+
+<ParamField path="contentLanguage" type="Language" required>
+  Site content language
+</ParamField>
+
+<ParamField path="httpRequestFactory" type="HttpRequestFactory" required>
+  Factory for making HTTP requests
+</ParamField>
+
+<ParamField path="urlUtils" type="UrlUtils" required>
+  URL manipulation utilities
+</ParamField>
+
+## Configuration
+
+The manifest is configured via `$wgCitizenManifestOptions` in `LocalSettings.php`:
+
+```php
+$wgCitizenManifestOptions = [
+    'short_name' => 'MyWiki',
+    'description' => 'My awesome wiki',
+    'theme_color' => '#131a21',
+    'background_color' => '#fff',
+    'icons' => [
+        [
+            'src' => '/path/to/icon-192.png',
+            'sizes' => '192x192',
+            'type' => 'image/png'
+        ],
+        [
+            'src' => '/path/to/icon-512.png',
+            'sizes' => '512x512',
+            'type' => 'image/png',
+            'purpose' => 'any maskable'
+        ]
+    ]
+];
+```
+
+<ParamField path="short_name" type="string">
+  Short name for the app (shown on home screen)
+</ParamField>
+
+<ParamField path="description" type="string">
+  Description of the wiki
+</ParamField>
+
+<ParamField path="theme_color" type="string" required>
+  Theme color for browser UI (hex color)
+</ParamField>
+
+<ParamField path="background_color" type="string" required>
+  Background color for splash screen (hex color)
+</ParamField>
+
+<ParamField path="icons" type="array">
+  Array of icon objects. If empty, icons are auto-detected from `$wgLogos`
+</ParamField>
+
+## Methods
+
+### execute
+
+Executes the API action and builds the manifest response.
+
+```php
+public function execute(): void
+```
+
+**Behavior:**
+- Adds manifest fields to API result
+- Sets cache to 1 week (`CACHE_MAX_AGE = 604800`)
+- Sets cache mode to `public`
+
+**Manifest Fields Generated:**
+
+<ResponseField name="dir" type="string">
+  Text direction (`ltr` or `rtl`) from content language
+</ResponseField>
+
+<ResponseField name="lang" type="string">
+  Language code (e.g., `en`, `de`, `ja`)
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Site name from `$wgSitename`
+</ResponseField>
+
+<ResponseField name="scope" type="string">
+  Scope URL - set to server root (e.g., `https://wiki.example.com/`)
+</ResponseField>
+
+<ResponseField name="icons" type="array">
+  Array of icon objects with `src`, `sizes`, `type`, and optionally `purpose`
+</ResponseField>
+
+<ResponseField name="display" type="string">
+  Display mode - always `standalone`
+</ResponseField>
+
+<ResponseField name="orientation" type="string">
+  Orientation preference - always `natural`
+</ResponseField>
+
+<ResponseField name="start_url" type="string">
+  Start URL - main page URL from `Title::newMainPage()->getLocalURL()`
+</ResponseField>
+
+<ResponseField name="theme_color" type="string">
+  Theme color from config
+</ResponseField>
+
+<ResponseField name="background_color" type="string">
+  Background color from config
+</ResponseField>
+
+<ResponseField name="shortcuts" type="array">
+  Array of shortcut objects linking to Special:Search, Special:Randompage, and Special:RecentChanges
+</ResponseField>
+
+<ResponseField name="short_name" type="string" optional>
+  Short name (only if configured)
+</ResponseField>
+
+<ResponseField name="description" type="string" optional>
+  Description (only if configured)
+</ResponseField>
+
+### getIcons (private)
+
+Gets icons from config or falls back to `$wgLogos`.
+
+```php
+private function getIcons(): array
+```
+
+<ResponseField name="return" type="array">
+  Array of icon objects with allowed keys: `src`, `sizes`, `type`, `purpose`
+</ResponseField>
+
+**Icon Detection Logic:**
+1. If `$wgCitizenManifestOptions['icons']` is set, use those
+2. Otherwise, call `getIconsFromLogos()` to auto-detect from `$wgLogos`
+
+### getIconsFromLogos (private)
+
+Auto-detects icons from `$wgLogos` configuration.
+
+```php
+private function getIconsFromLogos(): array
+```
+
+<ResponseField name="return" type="array">
+  Array of icon objects detected from logo files
+</ResponseField>
+
+**Logo Keys Checked:**
+- `1x` - Standard resolution logo
+- `1.5x` - 1.5x resolution logo
+- `2x` - 2x resolution logo  
+- `icon` - Icon logo
+- `svg` - SVG logo
+
+**Features:**
+- Fetches logo files via HTTP to detect dimensions and MIME type
+- SVG logos get `sizes="any"` and `type="image/svg+xml"`
+- Skips logos where dimensions cannot be detected
+
+**Error Handling:**
+
+Wrapped in try-catch - HTTP request failures are silently handled (empty content).
+
+### getShortcuts (private)
+
+Generates PWA shortcuts for common special pages.
+
+```php
+private function getShortcuts(): array
+```
+
+<ResponseField name="return" type="array">
+  Array of shortcut objects with `name` and `url` keys
+</ResponseField>
+
+**Default Shortcuts:**
+- Search - `Special:Search`
+- Random page - `Special:Randompage`
+- Recent changes - `Special:RecentChanges`
+
+### getCustomPrinter
+
+Returns custom JSON formatter for the manifest.
+
+```php
+public function getCustomPrinter(): ApiWebappManifestFormatJson
+```
+
+<ResponseField name="return" type="ApiWebappManifestFormatJson">
+  Custom printer that outputs proper JSON manifest format
+</ResponseField>
+
+## API Usage
+
+### Endpoint
+
+```
+GET /api.php?action=appmanifest&format=json
+```
+
+### Example Request
+
+```bash
+curl 'https://wiki.example.com/api.php?action=appmanifest&format=json'
+```
+
+### Example Response
+
+```json
+{
+  "dir": "ltr",
+  "lang": "en",
+  "name": "My Wiki",
+  "short_name": "MyWiki",
+  "description": "An example wiki",
+  "scope": "https://wiki.example.com/",
+  "start_url": "https://wiki.example.com/wiki/Main_Page",
+  "display": "standalone",
+  "orientation": "natural",
+  "theme_color": "#131a21",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/resources/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/resources/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Search",
+      "url": "https://wiki.example.com/wiki/Special:Search"
+    },
+    {
+      "name": "Random page",
+      "url": "https://wiki.example.com/wiki/Special:Randompage"
+    },
+    {
+      "name": "Recent changes",
+      "url": "https://wiki.example.com/wiki/Special:RecentChanges"
+    }
+  ]
+}
+```
+
+## Enabling the Manifest
+
+The manifest is enabled via configuration:
+
+```php
+// In LocalSettings.php
+$wgCitizenEnableManifest = true;
+
+// Optional: Customize manifest options
+$wgCitizenManifestOptions = [
+    'short_name' => 'Wiki',
+    'theme_color' => '#11151d',
+    'background_color' => '#ffffff'
+];
+```
+
+When enabled, `SkinCitizen::addMetadata()` automatically adds:
+
+```html
+<link rel="manifest" href="/api.php?action=appmanifest">
+```
+
+## Caching
+
+The API response is cached for **1 week** (604,800 seconds) with `public` cache mode, making it suitable for CDN caching.
+
+## Security Considerations
+
+The manifest is only linked when:
+1. `$wgCitizenEnableManifest` is `true`
+2. Anonymous users have read permission (`$wgGroupPermissions['*']['read'] === true`)
+
+This prevents manifest exposure on private wikis.
+
+## Related
+
+- [SkinCitizen](/api/skin-citizen) - Main skin class that links to the manifest
+- [Progressive Web Apps on MDN](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
+- [Web App Manifest Spec](https://www.w3.org/TR/appmanifest/)

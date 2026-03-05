@@ -1,0 +1,192 @@
+---
+title: Theme Configuration
+description: Configure theme colors, PWA manifest, and appearance settings
+---
+
+Citizen provides extensive theming capabilities including dark mode, custom colors, and Progressive Web App (PWA) support.
+
+## Theme Mode
+
+<ParamField path="$wgCitizenThemeDefault" type="string" default="auto">
+  Default theme mode for the skin. Users can override this in their preferences.
+  
+  **Valid values:**
+  - `'auto'` - Follow system theme preference (recommended)
+  - `'light'` - Always use light theme
+  - `'dark'` - Always use dark theme
+  
+  **Example:**
+  ```php
+  $wgCitizenThemeDefault = 'dark';
+  ```
+</ParamField>
+
+## Theme Colors
+
+<ParamField path="$wgCitizenThemeColor" type="string" default="#0d0e12">
+  The theme color used in the HTML meta tag and browser UI (address bar, task switcher).
+  
+  This color should match your wiki's primary brand color. It's particularly visible on mobile devices.
+  
+  **Example:**
+  ```php
+  // Use a custom brand color
+  $wgCitizenThemeColor = '#1a73e8';
+  ```
+  
+  <Warning>
+    Use a color that provides sufficient contrast with white text. The default `#0d0e12` is a dark navy that works well for both light and dark themes.
+  </Warning>
+</ParamField>
+
+## Progressive Web App (PWA)
+
+Citizen can generate a web app manifest to enable PWA features like "Add to Home Screen" on mobile devices.
+
+### Enable Manifest
+
+<ParamField path="$wgCitizenEnableManifest" type="boolean" default="true">
+  Enable or disable the web app manifest endpoint.
+  
+  When enabled, Citizen provides a manifest at `/api.php?action=appmanifest` that allows users to install your wiki as a progressive web app.
+  
+  **Example:**
+  ```php
+  // Disable PWA manifest
+  $wgCitizenEnableManifest = false;
+  ```
+  
+  <Note>
+    The manifest is only generated when anonymous users have read permissions (`$wgGroupPermissions['*']['read'] = true`).
+  </Note>
+</ParamField>
+
+### Manifest Options
+
+<ParamField path="$wgCitizenManifestOptions" type="array" default="See below">
+  Configuration for the web app manifest. Customize PWA appearance and behavior.
+  
+  **Default value:**
+  ```php
+  [
+      'background_color' => '#0d0e12',
+      'description' => '',
+      'short_name' => '',
+      'theme_color' => '#0d0e12',
+      'icons' => []
+  ]
+  ```
+  
+  **Properties:**
+  - `background_color` (string) - Splash screen background color
+  - `description` (string) - Description shown in app stores and install prompts
+  - `short_name` (string) - Short name for home screen (12 characters max recommended)
+  - `theme_color` (string) - Browser UI color (usually matches `$wgCitizenThemeColor`)
+  - `icons` (array) - Custom icon definitions (see below)
+  
+  **Example:**
+  ```php
+  $wgCitizenManifestOptions = [
+      'background_color' => '#ffffff',
+      'description' => 'Community knowledge base',
+      'short_name' => 'Wiki',
+      'theme_color' => '#1a73e8',
+      'icons' => [
+          [
+              'src' => '/logo-192.png',
+              'sizes' => '192x192',
+              'type' => 'image/png',
+              'purpose' => 'any'
+          ],
+          [
+              'src' => '/logo-512.png',
+              'sizes' => '512x512',
+              'type' => 'image/png',
+              'purpose' => 'any'
+          ]
+      ]
+  ];
+  ```
+  
+  <Info>
+    If `icons` is empty or not provided, Citizen automatically generates icons from `$wgLogos`. For best results, ensure `$wgLogos` includes 192x192 and 512x512 PNG icons.
+  </Info>
+</ParamField>
+
+## Font Loading
+
+Citizen includes optional font packages for better typography in specific languages.
+
+<ParamField path="$wgCitizenEnableCJKFonts" type="boolean" default="false">
+  Enable Noto Sans CJK font for Chinese, Japanese, and Korean text.
+  
+  This loads an additional resource module (`skins.citizen.styles.fonts.cjk`) with optimized fonts for CJK languages.
+  
+  **Example:**
+  ```php
+  // Enable for wikis serving CJK content
+  $wgCitizenEnableCJKFonts = true;
+  ```
+  
+  <Warning>
+    CJK fonts add significant file size (~1-2MB). Only enable if your wiki primarily serves CJK content.
+  </Warning>
+</ParamField>
+
+<ParamField path="$wgCitizenEnableARFonts" type="boolean" default="false">
+  Enable Noto Naskh Arabic font for Arabic text.
+  
+  This loads an additional resource module (`skins.citizen.styles.fonts.ar`) with optimized fonts for Arabic script.
+  
+  **Example:**
+  ```php
+  // Enable for Arabic wikis
+  $wgCitizenEnableARFonts = true;
+  ```
+</ParamField>
+
+## Complete Example
+
+```php
+// Complete theme configuration example
+wfLoadSkin( 'Citizen' );
+
+// Theme settings
+$wgCitizenThemeDefault = 'auto';
+$wgCitizenThemeColor = '#2962ff';
+
+// PWA configuration
+$wgCitizenEnableManifest = true;
+$wgCitizenManifestOptions = [
+    'background_color' => '#ffffff',
+    'description' => 'The ultimate knowledge base',
+    'short_name' => 'MyWiki',
+    'theme_color' => '#2962ff',
+    'icons' => [
+        [
+            'src' => '/logo-192.png',
+            'sizes' => '192x192',
+            'type' => 'image/png'
+        ],
+        [
+            'src' => '/logo-512.png',
+            'sizes' => '512x512',
+            'type' => 'image/png'
+        ]
+    ]
+];
+
+// Font loading (only if needed)
+$wgCitizenEnableCJKFonts = false;
+$wgCitizenEnableARFonts = false;
+```
+
+## Client Preferences
+
+While server-side configuration sets defaults, users can customize their theme through MediaWiki's client preferences system. Citizen respects these preferences:
+
+- `skin-theme` - User's theme choice (overrides `$wgCitizenThemeDefault`)
+- `citizen-feature-pure-black` - Use pure black for dark mode
+- `citizen-feature-image-dimming` - Dim images in dark mode
+
+See the [Features](/configuration/features) page for more client preference options.

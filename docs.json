@@ -1,122 +1,121 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Citizen",
+  "theme": "palm",
+  "mode": "custom",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#3366ff",
+    "light": "#5c8aff",
+    "dark": "#1a4dd9"
   },
   "favicon": "/favicon.svg",
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/StarCitizenTools/mediawiki-skins-Citizen"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/StarCitizenTools/mediawiki-skins-Citizen",
+      "discord": "https://discord.gg/XcKwqyD4sc"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Getting Started",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "introduction",
+              "installation",
+              "requirements"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/overview",
+              "configuration/theme",
+              "configuration/search",
+              "configuration/layout",
+              "configuration/features",
+              "configuration/extensions"
+            ]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "features/command-palette",
+              "features/preferences",
+              "features/collapsible-sections",
+              "features/table-of-contents",
+              "features/progressive-web-app",
+              "features/dark-mode"
             ]
           },
           {
             "group": "Customization",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "customization/theming",
+              "customization/css-variables",
+              "customization/templates",
+              "customization/resource-loader"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Extension Support",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "extensions/overview",
+              "extensions/supported-extensions",
+              "extensions/adding-support"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Development",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "development/setup",
+              "development/architecture",
+              "development/components",
+              "development/testing",
+              "development/contributing"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "PHP Classes",
             "pages": [
-              "api-reference/introduction"
+              "api/skin-citizen",
+              "api/components",
+              "api/hooks",
+              "api/webapp-manifest"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "JavaScript Modules",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api/search",
+              "api/command-palette",
+              "api/preferences",
+              "api/scripts"
+            ]
+          },
+          {
+            "group": "Styling",
+            "pages": [
+              "api/css-variables",
+              "api/less-mixins",
+              "api/tokens"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

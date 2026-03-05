@@ -1,0 +1,230 @@
+---
+title: SkinCitizen
+description: Core skin class for the Citizen MediaWiki skin
+---
+
+## Overview
+
+`SkinCitizen` is the main skin class for Citizen, extending MediaWiki's `SkinMustache` to provide a modern, customizable skin with support for themes, client preferences, and component-based rendering.
+
+**Namespace:** `MediaWiki\Skins\Citizen`
+
+**Location:** `includes/SkinCitizen.php`
+
+## Constructor
+
+The `SkinCitizen` class uses dependency injection to receive all required services.
+
+```php
+public function __construct(
+    UserFactory $userFactory,
+    GenderCache $genderCache,
+    UserIdentityLookup $userIdentityLookup,
+    LanguageConverterFactory $languageConverterFactory,
+    LanguageNameUtils $languageNameUtils,
+    PermissionManager $permissionManager,
+    ExtensionRegistry $extensionRegistry,
+    UserGroupManager $userGroupManager,
+    UrlUtils $urlUtils,
+    ?MobileContext $mfContext,
+    array $options = []
+)
+```
+
+<ParamField path="userFactory" type="UserFactory" required>
+  Factory for creating User objects
+</ParamField>
+
+<ParamField path="genderCache" type="GenderCache" required>
+  Cache for user gender information
+</ParamField>
+
+<ParamField path="userIdentityLookup" type="UserIdentityLookup" required>
+  Service for looking up user identities
+</ParamField>
+
+<ParamField path="languageConverterFactory" type="LanguageConverterFactory" required>
+  Factory for language variant conversion
+</ParamField>
+
+<ParamField path="languageNameUtils" type="LanguageNameUtils" required>
+  Utilities for language name handling
+</ParamField>
+
+<ParamField path="permissionManager" type="PermissionManager" required>
+  Manager for user permissions
+</ParamField>
+
+<ParamField path="extensionRegistry" type="ExtensionRegistry" required>
+  Registry for checking loaded extensions
+</ParamField>
+
+<ParamField path="userGroupManager" type="UserGroupManager" required>
+  Manager for user group information
+</ParamField>
+
+<ParamField path="urlUtils" type="UrlUtils" required>
+  Utilities for URL manipulation
+</ParamField>
+
+<ParamField path="mfContext" type="MobileContext|null" required>
+  MobileFrontend context (optional dependency)
+</ParamField>
+
+<ParamField path="options" type="array" default="[]">
+  Skin configuration options. If not set, defaults to `['name' => 'citizen']`
+</ParamField>
+
+## Key Methods
+
+### initPage
+
+Initializes the skin for the current page, adding metadata like theme colors and web app manifest.
+
+```php
+public function initPage( OutputPage $out ): void
+```
+
+<ParamField path="out" type="OutputPage" required>
+  The OutputPage object to initialize
+</ParamField>
+
+**Usage Example:**
+
+```php
+$skin = new SkinCitizen(
+    $userFactory,
+    $genderCache,
+    $userIdentityLookup,
+    $languageConverterFactory,
+    $languageNameUtils,
+    $permissionManager,
+    $extensionRegistry,
+    $userGroupManager,
+    $urlUtils,
+    $mfContext
+);
+$skin->initPage( $out );
+```
+
+### getHtmlElementAttributes
+
+Gets HTML element attributes for the `<html>` tag, including theme and client preference classes.
+
+```php
+public function getHtmlElementAttributes(): array
+```
+
+<ResponseField name="return" type="array">
+  Associative array of HTML attributes including CSS classes for theme, header position, and client preferences
+</ResponseField>
+
+**Usage Example:**
+
+```php
+$attrs = $skin->getHtmlElementAttributes();
+// Returns array with 'class' key containing theme and preference classes
+// e.g., ['class' => 'skin-theme-clientpref-os citizen-header-position-left ...']
+```
+
+### getTemplateData
+
+Builds the complete template data array for Mustache rendering, including all components.
+
+```php
+public function getTemplateData(): array
+```
+
+<ResponseField name="return" type="array">
+  Complete template data including component data for footer, main menu, page heading, page tools, search box, site stats, user info, sticky header, body content, and table of contents
+</ResponseField>
+
+**Returns Data Structure:**
+
+- `data-footer`: Footer component data
+- `data-main-menu`: Main menu component data
+- `data-page-footer`: Page footer component data
+- `data-page-heading`: Page heading component data
+- `data-page-sidebar`: Page sidebar component data
+- `data-page-tools`: Page tools component data
+- `data-search-box`: Search box component data
+- `data-site-stats`: Site statistics component data
+- `data-user-info`: User info component data
+- `data-sticky-header`: Sticky header component data
+- `data-body-content`: Body content component data
+- `data-toc`: Table of contents component data
+- `toc-enabled`: Boolean indicating if TOC is enabled
+
+**Usage Example:**
+
+```php
+$templateData = $skin->getTemplateData();
+// Use this data to render the Mustache template
+```
+
+## Configuration Constants
+
+### CLIENTPREFS_THEME_MAP
+
+Maps theme preference values to CSS class suffixes.
+
+```php
+private const CLIENTPREFS_THEME_MAP = [
+    'auto' => 'os',
+    'light' => 'day',
+    'dark' => 'night'
+];
+```
+
+### DEFAULT_CLIENT_PREFS
+
+Default client preference values applied to the HTML element.
+
+```php
+private const DEFAULT_CLIENT_PREFS = [
+    'citizen-feature-autohide-navigation' => '1',
+    'citizen-feature-image-dimming' => '0',
+    'citizen-feature-pure-black' => '0',
+    'citizen-feature-custom-font-size' => 'standard',
+    'citizen-feature-custom-width' => 'standard',
+    'citizen-feature-performance-mode' => '1',
+];
+```
+
+### OPTIONAL_FONT_MODULES
+
+Maps configuration keys to optional font module names.
+
+```php
+private const OPTIONAL_FONT_MODULES = [
+    'CitizenEnableCJKFonts' => 'skins.citizen.styles.fonts.cjk',
+    'CitizenEnableARFonts' => 'skins.citizen.styles.fonts.ar',
+];
+```
+
+## Protected Methods
+
+### runOnSkinTemplateNavigationHooks
+
+Ensures the `onSkinTemplateNavigation` hook runs after all other `SkinTemplateNavigation` hooks.
+
+```php
+protected function runOnSkinTemplateNavigationHooks(
+    SkinTemplate $skin,
+    array &$content_navigation
+): void
+```
+
+<ParamField path="skin" type="SkinTemplate" required>
+  The skin template instance
+</ParamField>
+
+<ParamField path="content_navigation" type="array" required>
+  Reference to content navigation array that will be modified
+</ParamField>
+
+## Related
+
+- [Components](/api/components) - Learn about Citizen component classes
+- [Hooks](/api/hooks) - Learn about hook handlers
+- [ApiWebappManifest](/api/webapp-manifest) - Web app manifest API

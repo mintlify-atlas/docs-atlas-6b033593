@@ -1,0 +1,515 @@
+---
+title: Contributing
+description: Guidelines for contributing to the Citizen MediaWiki skin
+---
+
+## Welcome
+
+Thank you for considering contributing to Citizen! This is a small open-source project, and we appreciate any help.
+
+## Ways to Contribute
+
+You can contribute to Citizen in several ways:
+
+- **Code patches**: Bug fixes, new features, refactoring
+- **Documentation improvements**: Enhance guides, fix typos, add examples
+- **Bug reports**: Report issues you encounter
+- **Feature requests**: Suggest new functionality
+- **Translations**: Help translate Citizen into various languages
+
+## How to Submit a Contribution
+
+<Steps>
+  <Step title="Fork the repository">
+    [Fork the Citizen repository](https://github.com/StarCitizenTools/mediawiki-skins-Citizen/fork) to your GitHub account.
+  </Step>
+
+  <Step title="Create a branch">
+    Create a new branch in your fork for your changes:
+    
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
+    
+    Use descriptive branch names like:
+    - `feature/command-palette-search`
+    - `fix/header-overlap`
+    - `refactor/button-component`
+  </Step>
+
+  <Step title="Make your changes">
+    Implement your changes following the [coding conventions](#coding-conventions).
+    
+    Run relevant tests as you work (see [Testing](/development/testing)).
+  </Step>
+
+  <Step title="Commit your changes">
+    Commit using [Conventional Commits](https://www.conventionalcommits.org/):
+    
+    ```bash
+    git commit -m "feat: add search highlighting"
+    ```
+    
+    The pre-commit hook will automatically add emojis and run checks.
+  </Step>
+
+  <Step title="Push to your fork">
+    ```bash
+    git push origin feature/your-feature-name
+    ```
+  </Step>
+
+  <Step title="Submit a pull request">
+    Create a pull request from your branch to the Citizen repository's main branch.
+    
+    In your PR description:
+    - Explain what the changes do
+    - Reference any related issues
+    - Include screenshots for UI changes
+    - List any breaking changes
+  </Step>
+</Steps>
+
+We'll review your pull request and, if everything looks good, merge it into the main codebase.
+
+## Coding Conventions
+
+### PHP
+
+#### File Structure
+
+All PHP files must start with strict types declaration:
+
+```php
+<?php
+
+declare( strict_types=1 );
+
+namespace MediaWiki\Skins\Citizen\Components;
+```
+
+#### Type Hints
+
+Use native PHP types for all properties, parameters, and return values:
+
+```php
+public function __construct(
+    private string $label,
+    private ?string $icon = null,
+    private bool $enabled = true
+) {
+    // ...
+}
+
+public function getTemplateData(): array {
+    // ...
+}
+```
+
+Use PHPDoc **only** for collection types:
+
+```php
+/**
+ * @param string[] $items
+ */
+public function setItems( array $items ): void {
+    $this->items = $items;
+}
+```
+
+#### Imports
+
+Always use MediaWiki-namespaced imports, never legacy shims:
+
+```php
+// ✅ Correct
+use MediaWiki\Title\Title;
+use MediaWiki\Content\TextContent;
+
+// ❌ Wrong - legacy shims will be removed
+use Title;
+use TextContent;
+```
+
+#### Boolean Parameters
+
+Avoid boolean parameters. Use class constants or named arrays instead:
+
+```php
+// ❌ Avoid
+public function display( bool $showIcon ) { }
+
+// ✅ Better
+const WITH_ICON = true;
+const WITHOUT_ICON = false;
+
+public function display( bool $iconMode = self::WITHOUT_ICON ) { }
+
+// ✅ Even better - use enums or constants
+public function display( string $mode = 'default' ) {
+    $mode = match ( $mode ) {
+        'with-icon', 'icon-only' => $mode,
+        default => 'default',
+    };
+}
+```
+
+#### Testing
+
+PHPUnit test class names match the class under test:
+
+```php
+/**
+ * @covers \MediaWiki\Skins\Citizen\Components\CitizenComponentButton
+ */
+class CitizenComponentButtonTest extends \MediaWikiUnitTestCase {
+    // Tests
+}
+```
+
+Use `@covers` annotation with the fully qualified name (FQN).
+
+### JavaScript
+
+#### Module System
+
+Use CommonJS modules:
+
+```javascript
+// Imports
+const utils = require( './utils.js' );
+const mw = require( 'mediawiki' );
+
+// Exports
+module.exports = {
+    init: function() {
+        // Implementation
+    }
+};
+```
+
+#### Testing
+
+JavaScript tests use Vitest in `tests/vitest/`:
+
+```javascript
+import { describe, it, expect, beforeEach } from 'vitest';
+
+describe( 'component', () => {
+    beforeEach( () => {
+        // Set up DOM with innerHTML
+        document.body.innerHTML = `
+            <div id="test">Content</div>
+        `;
+    } );
+
+    it( 'should do something', () => {
+        // Arrange
+        const element = document.getElementById( 'test' );
+
+        // Act
+        performAction( element );
+
+        // Assert
+        expect( element.textContent ).toBe( 'Updated' );
+    } );
+} );
+```
+
+### Vue
+
+#### Composition API
+
+Use Vue 3 Composition API with CommonJS:
+
+```javascript
+const { defineComponent, ref, computed } = require( 'vue' );
+
+module.exports = exports = defineComponent( {
+    name: 'ComponentName',
+    props: {
+        value: {
+            type: String,
+            required: true
+        }
+    },
+    setup( props ) {
+        const state = ref( null );
+        
+        const displayValue = computed( () => {
+            return props.value.toUpperCase();
+        } );
+
+        return {
+            state,
+            displayValue
+        };
+    }
+} );
+```
+
+### LESS/CSS
+
+#### CSS Custom Properties
+
+Prefer CSS custom properties (from `tokens-citizen.less`) over LESS variables:
+
+```less
+// ✅ Preferred
+.component {
+    color: var(--color-primary);
+    padding: var(--space-md);
+    border-radius: var(--border-radius-base);
+}
+
+// ❌ Avoid (unless LESS features needed)
+@import 'variables.less';
+
+.component {
+    color: @color-primary;
+    padding: @space-md;
+}
+```
+
+#### When to Use LESS
+
+Only import `variables.less` or `mixins.less` when you need LESS-specific features:
+
+```less
+@import 'mixins.less';
+
+.component {
+    .responsive-layout();  // Using a mixin
+    width: calc(100% - 20px);  // Calculation
+}
+```
+
+### Codex
+
+When using Codex components:
+
+- Use the Codex version bundled with MediaWiki
+- Don't assume a specific Codex version (minimum is v1.14.0)
+- List JS Codex components in `skin.json` under `CodexModule`
+
+Example:
+
+```php
+use MediaWiki\Skins\Citizen\Components\CitizenComponentButton;
+
+$button = new CitizenComponentButton(
+    label: 'Click me',
+    icon: 'cdx-icon-add',
+    weight: 'primary',
+    action: 'progressive'
+);
+```
+
+### skin.json
+
+`skin.json` is the **source of truth** for skin configuration.
+
+#### Adding Files
+
+When adding files under `resources/`, update the corresponding module:
+
+```json
+{
+  "ResourceModules": {
+    "skins.citizen.scripts": {
+      "packageFiles": [
+        "skins.citizen.scripts/index.js",
+        "skins.citizen.scripts/newFeature.js"
+      ]
+    }
+  }
+}
+```
+
+#### Extension Support
+
+To add support for a new extension:
+
+1. Create a LESS file under `skinStyles/ExtensionName/`
+2. Register it in `skin.json`:
+
+```json
+{
+  "ResourceModuleSkinStyles": {
+    "ext.extensionName": "skinStyles/ExtensionName/styles.less"
+  }
+}
+```
+
+#### Config Variables
+
+Declare config variables with the `wgCitizen` prefix:
+
+```json
+{
+  "config": {
+    "CitizenEnableSearch": {
+      "value": true,
+      "description": "Enable enhanced search functionality"
+    }
+  }
+}
+```
+
+Access in PHP:
+```php
+$enabled = $this->getConfig()->get( 'CitizenEnableSearch' );
+```
+
+### Commits
+
+Use [Conventional Commits](https://www.conventionalcommits.org/) format:
+
+```bash
+feat: add new feature
+fix: resolve bug
+refactor: improve code structure
+chore: update dependencies
+ci: modify GitHub Actions
+test: add test coverage
+docs: update documentation
+```
+
+**Important**: Do **not** include emojis manually. The pre-commit hook adds them automatically based on the commit type.
+
+Examples:
+```bash
+git commit -m "feat: add command palette search"
+git commit -m "fix(header): resolve sticky header overlap"
+git commit -m "refactor(components): simplify button logic"
+git commit -m "chore: bump dependencies"
+```
+
+### Tests
+
+Follow the **Arrange-Act-Assert** pattern with blank lines separating each phase:
+
+```javascript
+it( 'should update state when clicked', () => {
+    // Arrange
+    const button = document.createElement( 'button' );
+    const expectedValue = 'clicked';
+
+    // Act
+    button.click();
+
+    // Assert
+    expect( button.getAttribute( 'data-state' ) ).toBe( expectedValue );
+} );
+```
+
+#### DOM Fixtures in Vitest
+
+Use `document.body.innerHTML` with HTML strings instead of imperative `createElement` chains:
+
+```javascript
+// ✅ Preferred
+beforeEach( () => {
+    document.body.innerHTML = `
+        <div class="container">
+            <button id="test-button">Click</button>
+        </div>
+    `;
+} );
+
+// ❌ Avoid
+beforeEach( () => {
+    const container = document.createElement( 'div' );
+    container.className = 'container';
+    const button = document.createElement( 'button' );
+    button.id = 'test-button';
+    button.textContent = 'Click';
+    container.appendChild( button );
+    document.body.appendChild( container );
+} );
+```
+
+### i18n
+
+For any user-facing string:
+
+1. Add a message key to `i18n/en.json`:
+
+```json
+{
+    "citizen-feature-name": "Feature Name",
+    "citizen-feature-description": "Description of the feature"
+}
+```
+
+2. Add documentation to `i18n/qqq.json`:
+
+```json
+{
+    "citizen-feature-name": "Label for the feature name shown in the UI",
+    "citizen-feature-description": "Description text explaining what the feature does"
+}
+```
+
+Every key in `en.json` **must** have a corresponding entry in `qqq.json`.
+
+## Translations
+
+Translations are managed through [TranslateWiki.net](https://translatewiki.net/w/i.php?title=Special:Translate&group=mwgithub-star-citizen).
+
+To contribute translations:
+
+1. Create an account on TranslateWiki.net
+2. Find the Citizen project
+3. Select your language
+4. Translate the strings
+
+Translations are typically merged bi-weekly.
+
+<Note>
+Do not manually edit translation files other than `en.json` and `qqq.json`. All other languages are managed through TranslateWiki.
+</Note>
+
+## Code Review Process
+
+When your PR is submitted:
+
+1. **Automated checks run**: CI tests must pass
+2. **Maintainer review**: Code quality, architecture, conventions
+3. **Feedback**: Address any requested changes
+4. **Approval**: Once approved, your PR will be merged
+
+### Tips for Faster Review
+
+- Keep PRs focused and reasonably sized
+- Write clear commit messages
+- Include tests for new functionality
+- Add screenshots for UI changes
+- Respond promptly to feedback
+- Ensure all CI checks pass
+
+## Questions and Support
+
+If you have questions about contributing:
+
+- [Open an issue](https://github.com/StarCitizenTools/mediawiki-skins-Citizen/issues/new/choose)
+- Check existing issues and discussions
+- Review this documentation
+
+## Resources
+
+- [Development Setup](/development/setup)
+- [Architecture Guide](/development/architecture)
+- [Component System](/development/components)
+- [Testing Guide](/development/testing)
+- [MediaWiki Development Docs](https://www.mediawiki.org/wiki/Manual:Developing_extensions)
+- [Codex Design System](https://doc.wikimedia.org/codex/main/)
+- [Conventional Commits](https://www.conventionalcommits.org/)
+
+## Code of Conduct
+
+Please be respectful and constructive in all interactions. See [CODE_OF_CONDUCT.md](https://github.com/StarCitizenTools/mediawiki-skins-Citizen/blob/main/CODE_OF_CONDUCT.md) for details.
+
+## License
+
+By contributing to Citizen, you agree that your contributions will be licensed under the GPL-3.0-or-later license.

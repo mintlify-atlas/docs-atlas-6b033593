@@ -1,0 +1,570 @@
+---
+title: Scripts Module
+description: Core client-side scripts for the Citizen skin
+---
+
+The scripts module provides essential client-side functionality including sticky header, table of contents, collapsible sections, and more.
+
+## Module Configuration
+
+**Module Name:** `skins.citizen.scripts`
+
+**Dependencies:**
+- `mediawiki.storage`
+- `mediawiki.page.ready`
+- `mediawiki.util`
+
+**Entry Point:** `resources/skins.citizen.scripts/skin.js`
+
+**Package Files (from skin.json):**
+- skin.js
+- config.json (dynamic)
+- contentEnhancements.js
+- deferUntilFrame.js
+- dropdown.js
+- echo.js
+- lastModified.js
+- overflowElements/\*
+- performance.js
+- resizeObserver.js
+- scrollObserver.js
+- sectionObserver.js
+- search.js
+- sections.js
+- serviceWorker.js
+- setupObservers.js
+- share.js
+- speculationRules.js
+- stickyHeader.js
+- tableOfContents.js
+- tableOfContentsSections.js
+- tableOfContentsConfig.json (dynamic)
+- templates/\*.mustache
+
+## Main Entry Point
+
+From `skin.js`:
+
+```javascript
+function main(window) {
+  const config = require('./config.json');
+  
+  // Initialize core features
+  search.init({ window, document, mw });
+  createEchoUpgrade({ document, mw }).init();
+  setupObservers.init({ document, window, mw, IntersectionObserver });
+  dropdown.init({ document, window });
+  createLastModified({ document, Intl }).init();
+  createShare({ document, window, mw, navigator }).init();
+  createPerformanceMode({ document, mw }).init();
+
+  // Body content enhancements
+  mw.hook('wikipage.content').add((content) => {
+    initBodyContent(content[0], { document, window, mw, IntersectionObserver, ResizeObserver });
+  });
+
+  // Preferences (lazy)
+  if (config.wgCitizenEnablePreferences === true) {
+    initPreferences({ document, mw });
+  }
+
+  // Deferred tasks
+  mw.requestIdleCallback(
+    () => deferredTasks({ document, window, mw, navigator, HTMLScriptElement }),
+    { timeout: 3000 }
+  );
+}
+
+// Auto-execute
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
+  main(window);
+} else {
+  document.addEventListener('DOMContentLoaded', () => main(window));
+}
+```
+
+## Table of Contents
+
+From `tableOfContents.js`:
+
+### TableOfContents Class
+
+Manages the sidebar table of contents.
+
+#### Constructor
+
+```javascript
+new TableOfContents({
+  container: HTMLElement,          // TOC container element
+  onHeadingClick: (id) => {},     // Called when section clicked
+  onHashChange: (id) => {},       // Called on hash change
+  onToggleClick: (id) => {},      // Called when toggle clicked
+  onTogglePinned: () => {},       // Called when pin toggled
+  window: Window,
+  document: Document,
+  mw: Object
+});
+```
+
+#### Properties
+
+- `activeTopSection` (HTMLElement | undefined) - Active top-level section
+- `activeSubSection` (HTMLElement | undefined) - Active subsection
+- `expandedSections` (Array\<HTMLElement\>) - Expanded sections
+
+#### Methods
+
+**getActiveSectionIds()**
+
+Gets IDs of active sections.
+
+**Returns:**
+```typescript
+{
+  parent: string | undefined,
+  child: string | undefined
+}
+```
+
+**activateSection(id)**
+
+Activates a section by ID.
+
+**Parameters:**
+- `id` (string) - Section element ID
+
+```javascript
+toc.activateSection('toc-Example');
+```
+
+**deactivateSections()**
+
+Removes active state from all sections.
+
+**scrollToActiveSection(id)**
+
+Scrolls active section into view if needed.
+
+**Parameters:**
+- `id` (string) - Section element ID
+
+**expandSection(id)**
+
+Expands a top-level section.
+
+**Parameters:**
+- `id` (string) - Section element ID
+
+**collapseSections([selectedIds])**
+
+Collapses sections.
+
+**Parameters:**
+- `selectedIds` (Array\<string\>) - Optional specific IDs to collapse
+
+**toggleExpandSection(id)**
+
+Toggles section expansion.
+
+**Parameters:**
+- `id` (string) - Section element ID
+
+**changeActiveSection(id)**
+
+Changes the active section.
+
+**Parameters:**
+- `id` (string) - Section element ID
+
+```javascript
+toc.changeActiveSection('toc-Overview');
+```
+
+**reloadTableOfContents(sections)**
+
+Reloads TOC with new section data.
+
+**Parameters:**
+- `sections` (Array\<Section\>) - Section data array
+
+**Returns:** (Promise\<Array\<Section\>\>)
+
+```javascript
+const sections = [
+  {
+    toclevel: 1,
+    anchor: 'Overview',
+    line: 'Overview',
+    number: '1',
+    index: '1',
+    'is-top-level-section': true,
+    'is-parent-section': false
+  }
+];
+
+await toc.reloadTableOfContents(sections);
+```
+
+**unmount()**
+
+Cleans up event listeners.
+
+#### CSS Classes
+
+Static properties:
+- `TableOfContents.ACTIVE_SECTION_CLASS` = `'citizen-toc-list-item--active'`
+- `TableOfContents.ACTIVE_TOP_SECTION_CLASS` = `'citizen-toc-level-1--active'`
+- `TableOfContents.EXPANDED_SECTION_CLASS` = `'citizen-toc-list-item--expanded'`
+- `TableOfContents.LINK_CLASS` = `'citizen-toc-link'`
+- `TableOfContents.TOGGLE_CLASS` = `'citizen-toc-toggle'`
+
+### Section Type
+
+```typescript
+interface Section {
+  toclevel: number;               // Heading level
+  anchor: string;                 // Section anchor
+  line: string;                   // Section title
+  number: string;                 // Section number
+  index: string;                  // Section index
+  byteoffset?: number;            // Byte offset in wikitext
+  fromtitle?: string;             // Source page title
+  'is-parent-section': boolean;   // Has subsections
+  'is-top-level-section': boolean; // Top level
+  'array-sections'?: Section[];   // Subsections
+  level?: string;                 // CSS level class
+}
+```
+
+## Sticky Header
+
+From `stickyHeader.js`:
+
+### StickyHeader Class
+
+Manages sticky header behavior.
+
+#### Constructor
+
+```javascript
+const { StickyHeader } = require('./stickyHeader.js');
+
+const stickyHeader = new StickyHeader({
+  stickyHeaderElement: HTMLElement,
+  document: Document
+});
+```
+
+#### Methods
+
+**init()**
+
+Initializes sticky header components.
+
+```javascript
+stickyHeader.init();
+```
+
+**show()**
+
+Shows sticky header.
+
+```javascript
+stickyHeader.show();
+```
+
+**hide()**
+
+Hides sticky header.
+
+```javascript
+stickyHeader.hide();
+```
+
+**setCSSVariable(value)**
+
+Updates `--height-sticky-header` CSS variable.
+
+**Parameters:**
+- `value` (number) - Height in pixels
+
+**initFakeButtons()**
+
+Initializes fake button click delegation.
+
+**initDropdowns()**
+
+Initializes dropdown menus in header.
+
+**updateEditIcon()**
+
+Updates edit icon if visual editor absent.
+
+**bind()**
+
+Binds event listeners.
+
+**unbind()**
+
+Unbinds event listeners.
+
+#### Constants
+
+```javascript
+const {
+  STICKY_HEADER_ID,               // 'citizen-sticky-header'
+  STICKY_HEADER_VISIBLE_CLASS     // 'citizen-sticky-header-visible'
+} = require('./stickyHeader.js');
+```
+
+## Collapsible Sections
+
+From `sections.js`:
+
+### createSections({ document, bodyContent })
+
+Factory function for collapsible sections.
+
+**Returns:** Object with `init()` method
+
+**Usage:**
+```javascript
+const { createSections } = require('./sections.js');
+
+const sections = createSections({ document, bodyContent });
+sections.init();
+```
+
+**Behavior:**
+- Toggles section visibility on heading click
+- Uses `hidden="until-found"` attribute
+- Excludes edit section links from toggle
+- Only active if `citizen-sections-enabled` class on body
+
+**CSS Classes:**
+- `.citizen-section-heading` - Clickable heading
+- `.citizen-section` - Collapsible section content
+
+## Content Enhancements
+
+From `contentEnhancements.js`:
+
+### createContentEnhancements({ document, bodyContent })
+
+Factory for content enhancements.
+
+**Returns:** Object with `init()` method
+
+**Features:**
+- External link icons
+- Link formatting
+- Media enhancements
+
+## Observers
+
+From `setupObservers.js`:
+
+### setupObservers.init({ document, window, mw, IntersectionObserver })
+
+Sets up page observers.
+
+**Observers:**
+- Scroll observer for sticky header
+- Section observer for TOC highlighting
+- Resize observer for responsive behavior
+
+## Dropdown
+
+From `dropdown.js`:
+
+### dropdown.init({ document, window })
+
+Initializes dropdown menus.
+
+**Features:**
+- Click outside to close
+- Keyboard navigation
+- Multiple dropdown support
+
+## Last Modified
+
+From `lastModified.js`:
+
+### createLastModified({ document, Intl })
+
+Factory for last modified date formatter.
+
+**Returns:** Object with `init()` method
+
+**Features:**
+- Formats last modified timestamp
+- Uses Intl.DateTimeFormat for localization
+- Displays relative time
+
+## Share
+
+From `share.js`:
+
+### createShare({ document, window, mw, navigator })
+
+Factory for share functionality.
+
+**Returns:** Object with `init()` method
+
+**Features:**
+- Native Web Share API when available
+- Fallback to clipboard copy
+- Share button integration
+
+**Usage:**
+```javascript
+const { createShare } = require('./share.js');
+const share = createShare({ document, window, mw, navigator });
+share.init();
+```
+
+## Performance Mode
+
+From `performance.js`:
+
+### createPerformanceMode({ document, mw })
+
+Factory for performance mode.
+
+**Returns:** Object with `init()` method
+
+**Features:**
+- Reduces animations when enabled
+- Manages CSS classes
+- Syncs with preference system
+
+## Service Worker
+
+From `serviceWorker.js`:
+
+### createServiceWorker({ mw, navigator })
+
+Factory for service worker registration.
+
+**Returns:** Object with `register()` method
+
+**Usage:**
+```javascript
+const { createServiceWorker } = require('./serviceWorker.js');
+const sw = createServiceWorker({ mw, navigator });
+sw.register();
+```
+
+## Speculation Rules
+
+From `speculationRules.js`:
+
+### createSpeculationRules({ document, mw, HTMLScriptElement })
+
+Factory for Speculation Rules API.
+
+**Returns:** Object with `init()` method
+
+**Features:**
+- Prefetches likely navigation targets
+- Uses Speculation Rules API when available
+
+## Utility Functions
+
+### deferUntilFrame(callback, frameCount)
+
+Defers callback execution until specified frame.
+
+**Parameters:**
+- `callback` (Function) - Function to execute
+- `frameCount` (number) - Number of frames to wait (default: 1)
+
+**Usage:**
+```javascript
+const deferUntilFrame = require('./deferUntilFrame.js');
+
+deferUntilFrame(() => {
+  console.log('Executed after next frame');
+});
+
+deferUntilFrame(() => {
+  console.log('Executed after 3 frames');
+}, 3);
+```
+
+## Configuration
+
+Dynamic configuration injected via ResourceLoader:
+
+**config.json:**
+- `wgCitizenEnablePreferences` (boolean)
+- Other skin configuration values
+
+**tableOfContentsConfig.json:**
+- `CitizenTableOfContentsCollapseAtCount` (number) - Headings threshold for collapse
+
+## Hooks
+
+The module uses MediaWiki hooks:
+
+### wikipage.content
+
+Fired when content is added/updated.
+
+**Usage:**
+```javascript
+mw.hook('wikipage.content').add((content) => {
+  // content is jQuery object of .mw-body-content
+  initBodyContent(content[0], dependencies);
+});
+```
+
+## Overflow Elements
+
+From `overflowElements/index.js`:
+
+### overflowElements.init({ document, window, mw, IntersectionObserver, ResizeObserver, bodyContent, config })
+
+Handles responsive overflow for tables and elements.
+
+**Features:**
+- Wraps overflowing elements
+- Fade indicators
+- Scroll behavior
+- Inherited classes from config
+
+**Configuration:**
+- `wgCitizenOverflowInheritedClasses` - CSS classes to inherit
+- `wgCitizenOverflowNowrapClasses` - CSS classes to skip
+
+## Echo Integration
+
+From `echo.js`:
+
+### createEchoUpgrade({ document, mw })
+
+Factory for Echo (notifications) integration.
+
+**Returns:** Object with `init()` method
+
+**Features:**
+- Upgrades Echo badge display
+- Syncs notification state
+
+## Loading States
+
+The skin manages loading states:
+
+**Classes:**
+- `.citizen-loading` - Added on page unload start
+- `.citizen-animations-ready` - Added when animations ready
+
+**Events:**
+- `beforeunload` - Adds loading class
+- `pagehide` - Removes loading class
+
+## Related Modules
+
+- [Search](/api/search) - Search typeahead
+- [Command Palette](/api/command-palette) - Command palette interface
+- [Preferences](/api/preferences) - User preferences panel

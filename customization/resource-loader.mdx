@@ -1,0 +1,615 @@
+---
+title: ResourceLoader Modules
+description: Understanding and working with MediaWiki's ResourceLoader module system in the Citizen skin
+---
+
+Citizen uses MediaWiki's [ResourceLoader](https://www.mediawiki.org/wiki/ResourceLoader) to efficiently load JavaScript, CSS, and other assets. This guide explains how the module system works and how to customize it.
+
+## ResourceLoader Overview
+
+ResourceLoader is MediaWiki's asset delivery system that:
+
+- **Bundles** multiple files into optimized requests
+- **Minifies** JavaScript and CSS
+- **Versions** resources for cache busting
+- **Loads** dependencies automatically
+- **Supports** conditional loading based on context
+
+## Module Configuration
+
+All modules are defined in `skin.json` under the `ResourceModules` key.
+
+### Module Structure
+
+```json
+{
+  "ResourceModules": {
+    "module.name": {
+      "class": "MediaWiki\\ResourceLoader\\ModuleClass",
+      "packageFiles": ["file1.js", "file2.js"],
+      "styles": ["styles.less"],
+      "dependencies": ["mediawiki.util"],
+      "messages": ["message-key"],
+      "targets": ["desktop", "mobile"]
+    }
+  }
+}
+```
+
+## Core Citizen Modules
+
+### Styles Module
+
+**Module name**: `skins.citizen.styles`
+
+```json
+"skins.citizen.styles": {
+  "class": "MediaWiki\\ResourceLoader\\SkinModule",
+  "features": {
+    "normalize": true,
+    "content-links": false,
+    "i18n-ordered-lists": true,
+    "i18n-headings": true,
+    "toc": false
+  },
+  "styles": [
+    "resources/skins.citizen.styles/skin.less"
+  ]
+}
+```
+
+**Location**: `resources/skins.citizen.styles/`
+
+**Features**:
+- Core skin styles
+- CSS custom properties (tokens)
+- Layout and typography
+- Component styles
+
+### Scripts Module
+
+**Module name**: `skins.citizen.scripts`
+
+```json
+"skins.citizen.scripts": {
+  "packageFiles": [
+    "resources/skins.citizen.scripts/skin.js",
+    {
+      "name": "resources/skins.citizen.scripts/config.json",
+      "callback": "MediaWiki\\Skins\\Citizen\\Hooks\\ResourceLoaderHooks::getCitizenResourceLoaderConfig"
+    },
+    "resources/skins.citizen.scripts/deferUntilFrame.js",
+    "resources/skins.citizen.scripts/dropdown.js",
+    "resources/skins.citizen.scripts/search.js",
+    "resources/skins.citizen.scripts/stickyHeader.js",
+    "resources/skins.citizen.scripts/tableOfContents.js"
+  ],
+  "messages": [
+    "citizen-share",
+    "citizen-share-copied"
+  ],
+  "dependencies": [
+    "mediawiki.storage",
+    "mediawiki.page.ready",
+    "mediawiki.util"
+  ]
+}
+```
+
+**Location**: `resources/skins.citizen.scripts/`
+
+**Features**:
+- Interactive UI components
+- Sticky header functionality
+- Search enhancements
+- Table of contents
+- Performance optimizations
+
+### Codex Styles Module
+
+**Module name**: `skins.citizen.codex.styles`
+
+```json
+"skins.citizen.codex.styles": {
+  "class": "MediaWiki\\ResourceLoader\\CodexModule",
+  "codexStyleOnly": true,
+  "codexComponents": [
+    "CdxButton"
+  ],
+  "styles": [
+    "resources/skins.citizen.codex.styles/CdxButton.less",
+    "resources/skins.citizen.codex.styles/CdxCheckbox.less"
+  ]
+}
+```
+
+**Purpose**: Loads Codex Design System component styles
+
+### Search Module
+
+**Module name**: `skins.citizen.search`
+
+```json
+"skins.citizen.search": {
+  "es6": true,
+  "styles": [
+    "resources/skins.citizen.search/skins.citizen.search.less",
+    "resources/skins.citizen.search/components/TypeaheadList.less"
+  ],
+  "packageFiles": [
+    "resources/skins.citizen.search/main.js",
+    "resources/skins.citizen.search/typeahead.js",
+    "resources/skins.citizen.search/searchClient.js"
+  ],
+  "dependencies": [
+    "mediawiki.storage",
+    "mediawiki.template.mustache",
+    "mediawiki.util"
+  ]
+}
+```
+
+**Features**:
+- Search typeahead/autocomplete
+- Multiple search backend support
+- Search history
+
+### Preferences Module
+
+**Module name**: `skins.citizen.preferences`
+
+Vue 3-based theme and preferences interface.
+
+```json
+"skins.citizen.preferences": {
+  "packageFiles": [
+    "resources/skins.citizen.preferences/init.js",
+    "resources/skins.citizen.preferences/App.vue",
+    "resources/skins.citizen.preferences/RadioGroup.vue"
+  ],
+  "dependencies": [
+    "skins.citizen.preferences.codex",
+    "mediawiki.storage",
+    "vue"
+  ]
+}
+```
+
+### Icons Module
+
+**Module name**: `skins.citizen.icons`
+
+```json
+"skins.citizen.icons": {
+  "class": "MediaWiki\\ResourceLoader\\OOUIIconPackModule",
+  "icons": [
+    "article",
+    "bell",
+    "edit",
+    "search",
+    "settings",
+    "userAvatar"
+  ]
+}
+```
+
+**Purpose**: SVG icon sprite generation
+
+## Adding Custom Modules
+
+### Method 1: Via Extension
+
+Create an extension with custom modules:
+
+```json
+// extension.json
+{
+  "ResourceModules": {
+    "ext.myExtension.citizen": {
+      "styles": ["modules/styles.less"],
+      "scripts": ["modules/init.js"],
+      "dependencies": ["skins.citizen.scripts"]
+    }
+  },
+  "ResourceFileModulePaths": {
+    "localBasePath": "",
+    "remoteExtPath": "MyExtension"
+  }
+}
+```
+
+### Method 2: Via LocalSettings.php
+
+Register modules dynamically:
+
+```php
+// LocalSettings.php
+$wgResourceModules['ext.custom.citizen'] = [
+  'localBasePath' => __DIR__ . '/custom',
+  'remoteExtPath' => 'custom',
+  'scripts' => ['custom.js'],
+  'styles' => ['custom.less'],
+  'dependencies' => ['skins.citizen.scripts'],
+];
+```
+
+### Method 3: Skin Styles
+
+Add styles specifically for Citizen:
+
+```json
+// In your extension.json
+{
+  "ResourceModuleSkinStyles": {
+    "citizen": {
+      "+ext.myExtension": "skinStyles/citizen/ext.myExtension.less"
+    }
+  }
+}
+```
+
+## Loading Modules
+
+### Automatic Loading
+
+Modules specified in `skin.json` under the skin's `scripts` and `styles` arrays load automatically:
+
+```json
+{
+  "ValidSkinNames": {
+    "citizen": {
+      "class": "MediaWiki\\Skins\\Citizen\\SkinCitizen",
+      "args": [
+        {
+          "styles": [
+            "skins.citizen.styles",
+            "skins.citizen.codex.styles",
+            "skins.citizen.icons"
+          ],
+          "scripts": [
+            "skins.citizen.scripts"
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+### Manual Loading in PHP
+
+Load modules conditionally:
+
+```php
+// In a hook or skin method
+$out = $this->getOutput();
+
+// Add module
+$out->addModules('ext.custom.module');
+
+// Add module styles only
+$out->addModuleStyles('ext.custom.styles');
+
+// Add inline script
+$out->addInlineScript('mw.log("Custom code");');
+```
+
+### Manual Loading in JavaScript
+
+Load modules dynamically:
+
+```javascript
+// Load a module
+mw.loader.using(['ext.custom.module'], function() {
+  // Code runs after module loads
+  console.log('Module loaded!');
+});
+
+// Load multiple modules
+mw.loader.using([
+  'mediawiki.api',
+  'oojs-ui-windows'
+]).then(function() {
+  // Use the loaded modules
+});
+```
+
+## Module Types
+
+### Style Modules
+
+```json
+"ext.custom.styles": {
+  "styles": [
+    "styles/main.less",
+    "styles/components.less"
+  ],
+  "targets": ["desktop", "mobile"]
+}
+```
+
+**File types**: `.css`, `.less`
+
+### Script Modules
+
+```json
+"ext.custom.scripts": {
+  "scripts": [
+    "scripts/init.js",
+    "scripts/utils.js"
+  ]
+}
+```
+
+**File types**: `.js`
+
+### Package Modules
+
+Modern module format with ES6 support:
+
+```json
+"ext.custom.package": {
+  "packageFiles": [
+    "index.js",
+    "components/Button.js",
+    {
+      "name": "config.json",
+      "callback": "MyExtension\\Hooks::getConfig"
+    },
+    {
+      "name": "templates/Button.mustache",
+      "file": "templates/Button.mustache",
+      "type": "text"
+    }
+  ]
+}
+```
+
+**Features**:
+- ES6 modules with `require()` and `module.exports`
+- Dynamic file generation via callbacks
+- Template embedding
+
+### Vue Modules
+
+```json
+"ext.custom.vue": {
+  "packageFiles": [
+    "init.js",
+    "App.vue",
+    "components/Widget.vue"
+  ],
+  "dependencies": ["vue", "pinia"]
+}
+```
+
+**Requirements**: Vue 3 is available in MediaWiki 1.43+
+
+## Dependencies
+
+### Common MediaWiki Dependencies
+
+| Module | Description |
+|--------|-------------|
+| `mediawiki.api` | MW API client |
+| `mediawiki.util` | Utility functions |
+| `mediawiki.storage` | LocalStorage wrapper |
+| `mediawiki.user` | User information |
+| `mediawiki.Uri` | URL parsing |
+| `mediawiki.template.mustache` | Mustache templates |
+| `jquery.client` | Browser detection |
+| `oojs-ui-core` | OOUI framework |
+| `vue` | Vue 3 framework |
+| `pinia` | Vue state management |
+
+### Citizen Dependencies
+
+| Module | Description |
+|--------|-------------|
+| `skins.citizen.scripts` | Core Citizen JavaScript |
+| `skins.citizen.styles` | Core Citizen styles |
+| `skins.citizen.preferences` | Theme preferences |
+| `skins.citizen.search` | Search functionality |
+
+### Declaring Dependencies
+
+```json
+"dependencies": [
+  "mediawiki.api",
+  "skins.citizen.scripts"
+]
+```
+
+## Messages
+
+Include i18n messages in modules:
+
+```json
+"messages": [
+  "my-extension-button-label",
+  "my-extension-success-message"
+]
+```
+
+Access in JavaScript:
+
+```javascript
+const label = mw.msg('my-extension-button-label');
+const html = mw.message('my-extension-success-message').parse();
+```
+
+## Callbacks for Dynamic Content
+
+Generate module content dynamically:
+
+```json
+"packageFiles": [
+  {
+    "name": "config.json",
+    "callback": "MyExtension\\Hooks\\ResourceLoaderHooks::getConfig"
+  }
+]
+```
+
+```php
+// In ResourceLoaderHooks.php
+namespace MyExtension\Hooks;
+
+use MediaWiki\ResourceLoader\Context;
+
+class ResourceLoaderHooks {
+  public static function getConfig(Context $context): array {
+    return [
+      'apiEndpoint' => '/api/custom',
+      'enableFeature' => true,
+      'userCanEdit' => $context->getUserObj()->isAllowed('edit')
+    ];
+  }
+}
+```
+
+## Skin Styles Override
+
+Extensions can provide skin-specific styles:
+
+```json
+// In extension.json
+{
+  "ResourceModuleSkinStyles": {
+    "citizen": {
+      "+ext.myExtension.ui": "skinStyles/citizen/ext.myExtension.ui.less"
+    }
+  }
+}
+```
+
+The `+` prefix means "add to module" (merge styles).
+
+## Loading Strategies
+
+### Position
+
+```json
+"position": "top"  // Load in <head>
+"position": "bottom"  // Load at end of <body> (default)
+```
+
+### Targets
+
+```json
+"targets": ["desktop", "mobile"]
+```
+
+### Group
+
+```json
+"group": "site"  // User-editable site modules
+"group": "user"  // User-editable user modules
+"group": "private"  // Not cached by CDN
+```
+
+## LESS Variables
+
+Import Citizen variables in your LESS:
+
+```less
+// In your LESS file
+@import 'mediawiki.skin.variables.less';
+@import 'variables.less'; // Citizen variables
+
+.my-component {
+  color: var( --color-base );
+  background: var( --color-surface-1 );
+  border-radius: var( --border-radius-base );
+  padding: var( --space-md );
+  font-family: @font-family-base;
+}
+```
+
+## Module Best Practices
+
+1. **Use dependencies** - Don't duplicate code; depend on existing modules
+2. **Keep modules focused** - Separate concerns (styles vs. scripts)
+3. **Load conditionally** - Only load what's needed for the current page
+4. **Minimize dependencies** - Each dependency adds to load time
+5. **Use packageFiles for modern JS** - Better than legacy `scripts` array
+6. **Version your modules** - Change module name or content to bust cache
+7. **Test module loading** - Use browser DevTools to verify modules load
+
+## Debugging
+
+### Enable Debug Mode
+
+```php
+// LocalSettings.php
+$wgResourceLoaderDebug = true;
+```
+
+This disables minification and shows individual file requests.
+
+### Check Module Registration
+
+```javascript
+// In browser console
+mw.loader.getState('skins.citizen.scripts');
+// Returns: 'ready', 'loading', 'registered', etc.
+
+// List all modules
+mw.loader.getModuleNames();
+```
+
+### Inspect Module Contents
+
+```javascript
+// Get module implementation
+mw.loader.inspect('skins.citizen.scripts');
+```
+
+### Clear ResourceLoader Cache
+
+```bash
+php maintenance/rebuildLocalisationCache.php
+php maintenance/run.php purgeChangedFiles
+```
+
+Or append `?debug=true` to URLs.
+
+## Extension Skin Styles Examples
+
+Citizen includes styles for 100+ extensions. Example structure:
+
+```
+skinStyles/
+├── extensions/
+│   ├── Echo/
+│   │   ├── ext.echo.ui.less
+│   │   └── ext.echo.styles.badge.less
+│   ├── VisualEditor/
+│   │   ├── ext.visualEditor.core.less
+│   │   └── ext.visualEditor.desktopArticleTarget.init.less
+│   └── Wikibase/
+│       └── wikibase.client.init.less
+├── mediawiki/
+│   ├── special/
+│   └── ui/
+└── ooui/
+    └── oojs-ui-core.less
+```
+
+Registered in `skin.json`:
+
+```json
+"ResourceModuleSkinStyles": {
+  "citizen": {
+    "+ext.echo.ui": "skinStyles/extensions/Echo/ext.echo.ui.less",
+    "+ext.visualEditor.core": "skinStyles/extensions/VisualEditor/ext.visualEditor.core.less"
+  }
+}
+```
+
+## Related
+
+- [Theming](/customization/theming) - Customize visual appearance
+- [CSS Variables](/customization/css-variables) - Available design tokens
+- [Templates](/customization/templates) - HTML structure customization
+- [MediaWiki ResourceLoader](https://www.mediawiki.org/wiki/ResourceLoader) - Official documentation

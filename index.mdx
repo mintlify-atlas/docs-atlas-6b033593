@@ -1,97 +1,298 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: Citizen - MediaWiki Skin Documentation
 ---
 
-## Setting up
+<div className="relative overflow-hidden bg-gradient-to-br from-[#0f1117] via-[#1a1d27] to-[#0f1117] py-20">
+  <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-10"></div>
+  <div className="relative max-w-6xl mx-auto px-6 lg:px-8">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      <div className="lg:col-span-7">
+        <h1 className="text-5xl sm:text-6xl font-bold text-white mb-6 leading-tight">
+          A beautiful, usable MediaWiki skin
+        </h1>
+        <p className="text-xl text-gray-300 mb-8 max-w-2xl leading-relaxed">
+          Citizen is a responsive MediaWiki skin with extensive extension support, modern UI patterns, and powerful customization options. Built for wikis that need to look great and work seamlessly.
+        </p>
+        <div className="flex flex-wrap gap-4">
+          <a
+            href="/installation"
+            className="inline-flex items-center px-6 py-3 rounded-lg bg-[#3366ff] text-white font-semibold hover:bg-[#5c8aff] transition-colors no-underline"
+          >
+            Get Started
+            <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </a>
+          <a
+            href="/introduction"
+            className="inline-flex items-center px-6 py-3 rounded-lg border border-white/30 bg-white/10 text-white font-semibold hover:bg-white/20 transition-colors no-underline"
+          >
+            View Documentation
+          </a>
+        </div>
+        <div className="mt-8 flex flex-wrap gap-6 text-sm text-gray-400">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-[#3366ff]" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span>313+ GitHub stars</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-[#3366ff]" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span>70+ extensions styled</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-[#3366ff]" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span>MediaWiki 1.43+</span>
+          </div>
+        </div>
+      </div>
+      <div className="lg:col-span-5 hidden lg:block">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#3366ff] to-[#5c8aff] rounded-2xl blur-3xl opacity-20"></div>
+          <div className="relative bg-[#1a1d27] border border-[#27272a] rounded-2xl p-6 shadow-2xl">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-3 h-3 rounded-full bg-red-500"></div>
+              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+            </div>
+            <div className="space-y-2 text-sm font-mono">
+              <div className="text-gray-400"># Install Citizen skin</div>
+              <div className="text-[#3366ff]">wfLoadSkin<span className="text-white">(</span> <span className="text-green-400">'Citizen'</span> <span className="text-white">);</span></div>
+              <div className="text-gray-400 mt-4"># Enable features</div>
+              <div className="text-white">$wgCitizenEnableCommandPalette <span className="text-[#3366ff]">=</span> <span className="text-yellow-400">true</span>;</div>
+              <div className="text-white">$wgCitizenEnablePreferences <span className="text-[#3366ff]">=</span> <span className="text-yellow-400">true</span>;</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-Get your documentation site up and running in minutes.
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Quick start</h2>
+  <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
+    Get Citizen up and running on your MediaWiki installation in minutes.
+  </p>
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+  <Steps>
+    <Step title="Download the skin">
+      Download the latest release from GitHub and extract it to your MediaWiki `skins/` directory.
 
-## Make it yours
+      ```bash
+      cd /path/to/mediawiki/skins
+      wget https://github.com/StarCitizenTools/mediawiki-skins-Citizen/archive/main.zip
+      unzip main.zip
+      mv mediawiki-skins-Citizen-main Citizen
+      ```
+    </Step>
 
-Design a docs site that looks great and empowers your users.
+    <Step title="Enable the skin">
+      Add the following line to your `LocalSettings.php` file:
 
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
-  </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
+      ```php LocalSettings.php
+      wfLoadSkin( 'Citizen' );
+      ```
+    </Step>
 
-## Create beautiful pages
+    <Step title="Configure options (optional)">
+      Customize Citizen's behavior by adding configuration variables:
 
-Everything you need to create world-class documentation.
+      ```php LocalSettings.php
+      # Enable command palette
+      $wgCitizenEnableCommandPalette = true;
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+      # Enable user preferences panel
+      $wgCitizenEnablePreferences = true;
 
-## Need inspiration?
+      # Set default theme (auto, light, or dark)
+      $wgCitizenThemeDefault = 'auto';
+      ```
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+      <Accordion title="See example output">
+        After enabling Citizen, your wiki will have a responsive layout with light/dark mode support, a command palette for quick navigation, and extensive styling for MediaWiki extensions.
+      </Accordion>
+    </Step>
+
+    <Step title="Verify installation">
+      Navigate to `Special:Version` on your wiki to confirm that Citizen is installed and active. You should see it listed under the "Installed skins" section.
+    </Step>
+  </Steps>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Key features</h2>
+  <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
+    Citizen brings modern UI patterns and powerful features to MediaWiki.
+  </p>
+
+  <CardGroup cols={2}>
+    <Card title="Responsive layout" icon="mobile" href="/features/dark-mode">
+      Adapts seamlessly to all screen sizes with mobile-first design principles and optimized touch interactions.
+    </Card>
+    <Card title="Command palette" icon="terminal" href="/features/command-palette">
+      Quick access to pages, search, and actions with keyboard shortcuts. Navigate your wiki at lightning speed.
+    </Card>
+    <Card title="Light & dark mode" icon="moon" href="/features/dark-mode">
+      Beautiful themes with automatic detection and smooth transitions. Users can choose their preferred appearance.
+    </Card>
+    <Card title="Extensible preferences" icon="sliders" href="/features/preferences">
+      Let users customize their experience with font size, width, performance mode, and more.
+    </Card>
+    <Card title="Collapsible sections" icon="list" href="/features/collapsible-sections">
+      Improve readability with collapsible article sections and a persistent table of contents.
+    </Card>
+    <Card title="Progressive Web App" icon="globe" href="/features/progressive-web-app">
+      Add your wiki to home screens for an app-like experience with offline support and web manifest.
+    </Card>
+    <Card title="Extension support" icon="puzzle-piece" href="/extensions/overview">
+      Styled support for 70+ MediaWiki extensions including VisualEditor, Semantic MediaWiki, and more.
+    </Card>
+    <Card title="Vue 3 components" icon="code" href="/development/components">
+      Built with modern Vue 3 composition API for interactive features like search and preferences.
+    </Card>
+  </CardGroup>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Explore by topic</h2>
+  <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
+    Find the documentation you need to configure, customize, and extend Citizen.
+  </p>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <a
+      href="/configuration/overview"
+      className="group block rounded-2xl border border-gray-200 dark:border-[#27272a] hover:border-[#3366ff] dark:hover:border-[#3366ff] overflow-hidden transition-colors no-underline bg-white dark:bg-[#1a1d27]"
+    >
+      <div className="p-6">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-lg bg-[#3366ff]/10 dark:bg-[#3366ff]/20 flex items-center justify-center">
+            <svg className="w-5 h-5 text-[#3366ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white">Configuration</h3>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+          Configure theme settings, search behavior, layout options, and feature flags to customize your wiki's behavior.
+        </p>
+        <div className="flex items-center text-sm text-[#3366ff] group-hover:gap-2 transition-all">
+          <span>View configuration guides</span>
+          <svg className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </a>
+
+    <a
+      href="/customization/theming"
+      className="group block rounded-2xl border border-gray-200 dark:border-[#27272a] hover:border-[#3366ff] dark:hover:border-[#3366ff] overflow-hidden transition-colors no-underline bg-white dark:bg-[#1a1d27]"
+    >
+      <div className="p-6">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-lg bg-[#3366ff]/10 dark:bg-[#3366ff]/20 flex items-center justify-center">
+            <svg className="w-5 h-5 text-[#3366ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+            </svg>
+          </div>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white">Customization</h3>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+          Customize Citizen's appearance with CSS variables, modify templates, and integrate with MediaWiki's ResourceLoader.
+        </p>
+        <div className="flex items-center text-sm text-[#3366ff] group-hover:gap-2 transition-all">
+          <span>Learn about theming</span>
+          <svg className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </a>
+
+    <a
+      href="/extensions/overview"
+      className="group block rounded-2xl border border-gray-200 dark:border-[#27272a] hover:border-[#3366ff] dark:hover:border-[#3366ff] overflow-hidden transition-colors no-underline bg-white dark:bg-[#1a1d27]"
+    >
+      <div className="p-6">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-lg bg-[#3366ff]/10 dark:bg-[#3366ff]/20 flex items-center justify-center">
+            <svg className="w-5 h-5 text-[#3366ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+            </svg>
+          </div>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white">Extension Support</h3>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+          Discover the 70+ MediaWiki extensions styled by Citizen and learn how to add support for additional extensions.
+        </p>
+        <div className="flex items-center text-sm text-[#3366ff] group-hover:gap-2 transition-all">
+          <span>Browse supported extensions</span>
+          <svg className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </a>
+
+    <a
+      href="/development/architecture"
+      className="group block rounded-2xl border border-gray-200 dark:border-[#27272a] hover:border-[#3366ff] dark:hover:border-[#3366ff] overflow-hidden transition-colors no-underline bg-white dark:bg-[#1a1d27]"
+    >
+      <div className="p-6">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-lg bg-[#3366ff]/10 dark:bg-[#3366ff]/20 flex items-center justify-center">
+            <svg className="w-5 h-5 text-[#3366ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+          </div>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white">Development</h3>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+          Set up a development environment, understand the architecture, and contribute to Citizen's codebase.
+        </p>
+        <div className="flex items-center text-sm text-[#3366ff] group-hover:gap-2 transition-all">
+          <span>Start contributing</span>
+          <svg className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <div className="rounded-2xl bg-gradient-to-br from-[#3366ff] to-[#1a4dd9] p-8 md:p-12 text-white">
+    <div className="max-w-3xl">
+      <h2 className="text-3xl font-bold mb-4">Ready to transform your wiki?</h2>
+      <p className="text-xl text-blue-100 mb-6">
+        Install Citizen today and give your MediaWiki site a modern, professional look with powerful features your users will love.
+      </p>
+      <div className="flex flex-wrap gap-4">
+        <a
+          href="/installation"
+          className="inline-flex items-center px-6 py-3 rounded-lg bg-white text-[#3366ff] font-semibold hover:bg-gray-100 transition-colors no-underline"
+        >
+          Install Citizen
+        </a>
+        <a
+          href="https://github.com/StarCitizenTools/mediawiki-skins-Citizen"
+          className="inline-flex items-center px-6 py-3 rounded-lg border border-white/30 bg-white/10 text-white font-semibold hover:bg-white/20 transition-colors no-underline"
+        >
+          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+          </svg>
+          View on GitHub
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

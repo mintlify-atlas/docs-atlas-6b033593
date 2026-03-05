@@ -1,0 +1,547 @@
+---
+title: Command Palette
+description: Advanced command palette interface with search, commands, and quick actions
+---
+
+The command palette provides a unified interface for search, navigation, and actions using a keyboard-driven overlay.
+
+## Module Configuration
+
+**Module Name:** `skins.citizen.commandPalette`
+
+**Dependencies:**
+- `mediawiki.api`
+- `mediawiki.jqueryMsg`
+- `mediawiki.language`
+- `mediawiki.page.ready`
+- `mediawiki.storage`
+- `mediawiki.util`
+- `skins.citizen.commandPalette.codex`
+- `vue`
+- `pinia`
+
+**Codex Components:**
+- `CdxButton`
+- `CdxIcon`
+- `CdxSearchResultTitle`
+- `CdxTextInput`
+- `CdxThumbnail`
+
+**Entry Point:** `resources/skins.citizen.commandPalette/init.js`
+
+## Initialization
+
+The command palette initializes automatically and registers itself with the search button:
+
+```javascript
+const Vue = require('vue');
+const { createPinia } = require('pinia');
+const App = require('./components/App.vue');
+const config = require('./config.json');
+
+function initApp() {
+  const teleportTarget = require('mediawiki.page.ready').teleportTarget;
+
+  const overlay = document.createElement('div');
+  overlay.classList.add('citizen-command-palette-overlay');
+  teleportTarget.appendChild(overlay);
+
+  const app = Vue.createMwApp(App, {}, config);
+  const pinia = createPinia();
+  app.use(pinia);
+
+  const commandPalette = app.mount(overlay);
+  registerButton(commandPalette);
+}
+```
+
+## Architecture
+
+### Provider System
+
+The command palette uses a provider-based architecture for extensibility:
+
+**Provider Interface:**
+```typescript
+interface CommandPaletteProvider {
+  id: string;                    // Unique provider ID
+  isAsync: boolean;              // Whether results are async
+  debounceMs?: number;           // Debounce delay for async
+  keepStaleResultsOnQueryChange?: boolean; // Keep old results while loading
+  canProvide(query: string): boolean;      // Whether provider handles query
+  getResults(query: string): Promise<CommandPaletteItem[]> | CommandPaletteItem[];
+  onResultSelect?(item: CommandPaletteItem): Promise<CommandPaletteActionResult>;
+}
+```
+
+**Built-in Providers:**
+
+1. **RecentItemsProvider** - Recently visited pages
+2. **CommandProvider** - Slash commands (namespace, action, user)
+3. **SearchProvider** - Page search via MediaWiki API
+4. **RelatedArticlesProvider** - Related articles (if extension enabled)
+5. **QueryActionProvider** - Quick actions (full-text search, media search, page edit)
+
+### Store (Pinia)
+
+Central state management using Pinia.
+
+#### useSearchStore
+
+**State:**
+```javascript
+{
+  searchQuery: '',           // Current query string
+  displayedItems: [],        // Items to display
+  isPending: false,          // Async operation in progress
+  showPending: false,        // Show loading indicator
+  debounceTimeout: null,     // Debounce timer ID
+  pendingDelayTimeout: null, // Delay before showing loader
+  needsInputFocus: false     // Signal to focus input
+}
+```
+
+**Getters:**
+- `hasDisplayedItems` - Whether any items exist
+- `searchUrl` - Full search URL for current query
+
+**Actions:**
+
+**updateQuery(query)**
+
+Updates search query and triggers appropriate provider.
+
+**Parameters:**
+- `query` (string) - New search query
+
+```javascript
+const searchStore = useSearchStore();
+searchStore.updateQuery('example');
+```
+
+**clearSearch()**
+
+Clears query and shows presults (recent + related).
+
+```javascript
+searchStore.clearSearch();
+```
+
+**handleSelection(result)**
+
+Handles item selection and returns action.
+
+**Parameters:**
+- `result` (CommandPaletteItem) - Selected item
+
+**Returns:** (Promise\<CommandPaletteActionResult\>)
+
+```javascript
+const action = await searchStore.handleSelection(selectedItem);
+switch (action.action) {
+  case 'navigate':
+    window.location.href = action.payload;
+    break;
+  case 'updateQuery':
+    searchStore.updateQuery(action.payload);
+    break;
+}
+```
+
+**dismissRecentItem(itemId)**
+
+Removes item from recent history.
+
+**Parameters:**
+- `itemId` (string | number) - Item ID to remove
+
+```javascript
+searchStore.dismissRecentItem('12345');
+```
+
+## Vue Components
+
+### App.vue
+
+Root component managing the command palette.
+
+**Props:** None
+
+**Exposed Methods:**
+- `open()` - Opens the command palette
+- `close()` - Closes the command palette
+
+**Events:**
+- Keyboard navigation (Arrow keys, Home, End)
+- Enter to select
+- Escape to close
+- Arrow Right to focus actions
+
+**Usage:**
+```javascript
+const commandPalette = app.mount(overlay);
+commandPalette.open();
+```
+
+### CommandPaletteHeader.vue
+
+Search input header.
+
+**Props:**
+- `modelValue` (string) - Current query
+- `isPending` (boolean) - Loading state
+- `showPending` (boolean) - Show loading indicator
+
+**Events:**
+- `update:modelValue` - Query changed
+- `close` - Close button clicked
+
+### CommandPaletteList.vue
+
+Main results list.
+
+**Props:**
+- `items` (Array\<CommandPaletteItem\>) - Items to display
+- `highlightedItemIndex` (number) - Currently highlighted index
+- `searchQuery` (string) - Current search query
+- `setItemRef` (Function) - Ref setter for items
+
+**Events:**
+- `select` - Item selected
+- `action` - Action button clicked
+- `navigate-list` - Keyboard navigation
+- `focus-action` - Action focused
+- `blur-actions` - Action blurred
+- `hover` - Item hovered
+
+### CommandPaletteListItem.vue
+
+Individual list item.
+
+**Props:**
+- `item` (CommandPaletteItem) - Item data
+- `index` (number) - Item index
+- `highlighted` (boolean) - Is highlighted
+- `searchQuery` (string) - Search query for highlighting
+
+**Events:**
+- `select` - Item clicked
+- `action` - Action button clicked
+- `hover` - Mouse hover
+
+**Exposed Methods:**
+- `focusFirstButton()` - Focus first action button
+
+### CommandPalettePresults.vue
+
+Pre-search results (recent + related).
+
+**Props:** Same as CommandPaletteList
+
+**Features:**
+- Groups items by type (related, recent)
+- Shows section headings
+- Includes dismiss actions for recent items
+
+### CommandPaletteEmptyState.vue
+
+Empty state display.
+
+**Props:**
+- `title` (string) - Empty state title
+- `description` (string) - Empty state description
+- `icon` (Object) - Codex icon object
+
+### CommandPaletteFooter.vue
+
+Keyboard hints footer.
+
+**Props:**
+- `hasHighlightedItemWithActions` (boolean)
+- `itemCount` (number)
+- `highlightedItemType` (string)
+- `isActionFocused` (boolean)
+- `isFirstActionFocused` (boolean)
+- `focusedActionIndex` (number)
+- `actionCount` (number)
+
+## Composables
+
+### useListNavigation
+
+Handles keyboard navigation for lists.
+
+**Parameters:**
+- `navigableItems` (Ref\<Array\>) - Items to navigate
+- `itemRefs` (Ref\<Map\>) - Map of item refs
+
+**Returns:**
+```javascript
+{
+  highlightedItemIndex,      // Ref<number>
+  handleNavigationKeydown    // (event: KeyboardEvent) => boolean
+}
+```
+
+**Supported Keys:**
+- **ArrowUp** - Previous item
+- **ArrowDown** - Next item
+- **Home** - First item
+- **End** - Last item
+
+**Example:**
+```javascript
+const { highlightedItemIndex, handleNavigationKeydown } = useListNavigation(
+  navigableItems,
+  itemRefs
+);
+```
+
+### useActionNavigation
+
+Handles navigation between action buttons within an item.
+
+**Parameters:**
+- `actions` (Ref\<Array\>) - Action buttons
+- `emit` (Function) - Vue emit function
+
+**Returns:**
+```javascript
+{
+  focusedActionIndex,        // Ref<number>
+  handleActionKeydown,       // (event: KeyboardEvent, index: number) => void
+  resetFocus                 // () => void
+}
+```
+
+**Supported Keys:**
+- **ArrowLeft** - Previous action
+- **ArrowRight** - Next action
+- **ArrowUp/Down** - Return to list navigation
+
+## Providers Detail
+
+### SearchProvider
+
+Searches MediaWiki pages.
+
+**Location:** `providers/SearchProvider.js`
+
+```javascript
+module.exports = {
+  id: 'search',
+  isAsync: true,
+  debounceMs: 250,
+  keepStaleResultsOnQueryChange: true,
+
+  canProvide(query) {
+    return !!query && !query.startsWith('/');
+  },
+
+  async getResults(query) {
+    const searchClient = SearchClientFactory.create();
+    const { fetch } = searchClient.fetchByQuery(query);
+    const searchResponse = await fetch;
+    return searchResponse.results.map(item => ({ ...item, source: 'search' }));
+  },
+
+  async onResultSelect(item) {
+    return { action: 'navigate', payload: item.url };
+  }
+};
+```
+
+### CommandProvider
+
+Handles slash commands.
+
+**Commands:**
+- `/ns` or `/namespace` - Search by namespace
+- `/action` - Trigger page actions
+- `/user` - Search users
+
+**Example:**
+```
+/ns Template:    → Searches Template namespace
+/action delete   → Shows delete action for current page
+/user Admin      → Searches for user "Admin"
+```
+
+### RecentItemsProvider
+
+Manages recent items via `services/recentItems.js`.
+
+**Storage Key:** `skin-citizen-command-palette-recent-items`
+
+**Methods:**
+```javascript
+const recentItems = createRecentItems();
+
+recentItems.saveRecentItem(item);     // Save item
+recentItems.getRecentItems();         // Get all items
+recentItems.removeRecentItem(item);   // Remove item
+```
+
+### RelatedArticlesProvider
+
+Fetches related articles if RelatedArticles extension is installed.
+
+**API:** Uses MediaWiki Action API `query+cirrusbuilddoc` to get related pages.
+
+### QueryActionProvider
+
+Provides quick actions for the current query.
+
+**Actions:**
+- Full-text search
+- Media search (if MediaSearch extension enabled)
+- Edit page (if query matches page name)
+
+## Search Clients
+
+### SearchClientFactory
+
+Creates appropriate search client.
+
+**Location:** `searchClients/SearchClientFactory.js`
+
+```javascript
+const SearchClientFactory = require('./searchClients/SearchClientFactory.js');
+const searchClient = SearchClientFactory.create();
+```
+
+### MwRestSearchClient
+
+MediaWiki REST API search client.
+
+**Methods:**
+
+**fetchByQuery(query)**
+
+Searches pages by query.
+
+**Parameters:**
+- `query` (string) - Search query
+
+**Returns:** `{ fetch: Promise, abort: Function }`
+
+```javascript
+const client = require('./searchClients/MwRestSearchClient.js')();
+const { fetch, abort } = client.fetchByQuery('example');
+
+try {
+  const response = await fetch;
+  console.log(response.results);
+} catch (error) {
+  if (error.name === 'AbortError') {
+    // Request was aborted
+  }
+}
+```
+
+## Types
+
+### CommandPaletteItem
+
+```typescript
+interface CommandPaletteItem {
+  id: string | number;
+  type: 'page' | 'command' | 'action' | 'user' | 'namespace';
+  title: string;
+  description?: string;
+  url?: string;
+  thumbnail?: { url: string };
+  actions?: CommandPaletteAction[];
+  source: string;  // Provider ID
+  isMouseClick?: boolean;
+}
+```
+
+### CommandPaletteAction
+
+```typescript
+interface CommandPaletteAction {
+  type: 'dismiss' | 'navigate' | 'event';
+  icon: string;
+  label: string;
+  url?: string;
+}
+```
+
+### CommandPaletteActionResult
+
+```typescript
+interface CommandPaletteActionResult {
+  action: 'navigate' | 'updateQuery' | 'none';
+  payload?: string;
+}
+```
+
+## Configuration
+
+From `skin.json`:
+
+- **wgCitizenEnableCommandPalette** (boolean) - Enable command palette (default: true)
+
+When enabled, replaces the standard search with the command palette interface.
+
+## Keyboard Shortcuts
+
+**Global:**
+- Click search button to open
+
+**Within Palette:**
+- **Escape** - Close palette
+- **Arrow Up/Down** - Navigate items
+- **Home/End** - Jump to first/last item
+- **Enter** - Select highlighted item
+- **Arrow Right** - Focus item actions (if available)
+- **Arrow Left** - Return to list from actions
+- **Type** - Updates search query
+
+## Styling
+
+Key CSS classes:
+
+- `.citizen-command-palette` - Main container
+- `.citizen-command-palette-backdrop` - Background overlay
+- `.citizen-command-palette__results` - Results container
+- `.citizen-command-palette-list-item` - Individual item
+- `.citizen-command-palette-list-item--highlighted` - Highlighted item
+- `.citizen-command-palette-list-item__action` - Action button
+
+## Extending the Command Palette
+
+To add custom providers, register them in the providers array:
+
+```javascript
+// Custom provider
+const MyProvider = {
+  id: 'my-provider',
+  isAsync: false,
+  
+  canProvide(query) {
+    return query.startsWith('@');
+  },
+  
+  getResults(query) {
+    // Return array of CommandPaletteItem
+    return [{
+      id: '1',
+      type: 'custom',
+      title: 'My Result',
+      url: '/wiki/MyPage',
+      source: 'my-provider'
+    }];
+  },
+  
+  async onResultSelect(item) {
+    return { action: 'navigate', payload: item.url };
+  }
+};
+```
+
+## Related Modules
+
+- [Search Module](/api/search) - Basic search typeahead
+- [Preferences](/api/preferences) - User preferences panel

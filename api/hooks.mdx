@@ -1,0 +1,386 @@
+---
+title: Hooks
+description: Hook handlers for extending and customizing Citizen skin behavior
+---
+
+## Overview
+
+Citizen provides hook handlers to integrate with MediaWiki's hook system. Hook classes are located in `includes/Hooks/` and handle both skin-specific and ResourceLoader-related functionality.
+
+**Namespace:** `MediaWiki\Skins\Citizen\Hooks`
+
+## SkinHooks
+
+Handles skin-related hooks for modifying page display, navigation, and UI elements.
+
+**Location:** `includes/Hooks/SkinHooks.php`
+
+**Implements:**
+- `BeforePageDisplayHook`
+- `OutputPageAfterGetHeadLinksArrayHook`
+- `SidebarBeforeOutputHook`
+- `SkinBuildSidebarHook`
+- `SkinPageReadyConfigHook`
+
+### onBeforePageDisplay
+
+Adds inline theme switcher script to page head for Citizen skin.
+
+```php
+public function onBeforePageDisplay( OutputPage $out, Skin $skin ): void
+```
+
+<ParamField path="out" type="OutputPage" required>
+  The OutputPage object
+</ParamField>
+
+<ParamField path="skin" type="Skin" required>
+  The current skin instance
+</ParamField>
+
+**Behavior:**
+- Only runs when `$skin->getSkinName()` is `'citizen'`
+- Only adds script when `CitizenEnablePreferences` config is `true`
+- Minifies and caches the inline script from `resources/skins.citizen.scripts/inline.js`
+
+**Usage Example:**
+
+```php
+// Hook is automatically called by MediaWiki
+// To enable, ensure CitizenEnablePreferences is true in LocalSettings.php
+$wgCitizenEnablePreferences = true;
+```
+
+### onOutputPageAfterGetHeadLinksArray
+
+Replaces the viewport meta tag with Citizen's optimized version.
+
+```php
+public function onOutputPageAfterGetHeadLinksArray( array &$tags, OutputPage $out ): void
+```
+
+<ParamField path="tags" type="array" required>
+  Reference to array of HTML head tags
+</ParamField>
+
+<ParamField path="out" type="OutputPage" required>
+  The OutputPage object
+</ParamField>
+
+**Changes from MediaWiki default:**
+- Added: `viewport-fit=cover` for iOS notch support
+- Removed: `user-scalable=yes` (default behavior)
+- Removed: `minimum-scale=0.25` (outdated iOS workaround)
+- Removed: `maximum-scale=5.0` (outdated iOS workaround)
+
+**Resulting meta tag:**
+```html
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+```
+
+### onSidebarBeforeOutput
+
+Modifies toolbox menu items before sidebar output.
+
+```php
+public function onSidebarBeforeOutput( Skin $skin, array &$sidebar ): void
+```
+
+<ParamField path="skin" type="Skin" required>
+  The current skin instance
+</ParamField>
+
+<ParamField path="sidebar" type="array" required>
+  Reference to sidebar data array
+</ParamField>
+
+**Purpose:** Adds icons and modifies toolbox menu items. This hook is used because `onSkinBuildSidebar` cannot access the toolbox reliably.
+
+### onSkinBuildSidebar
+
+Modifies sidebar navigation links with icons and adds site tools.
+
+```php
+public function onSkinBuildSidebar( Skin $skin, array &$bar ): void
+```
+
+<ParamField path="skin" type="Skin" required>
+  The current skin instance
+</ParamField>
+
+<ParamField path="bar" type="array" required>
+  Reference to sidebar navigation array
+</ParamField>
+
+**Features:**
+- Adds Special:SpecialPages link (on MW < 1.44)
+- Adds Upload link if uploads are enabled
+- Maps icons to menu items:
+  - `n-specialpages` → `specialPages`
+  - `t-specialpages` → `specialPages`
+  - `t-upload` → `upload`
+- Generates icon HTML for mapped items
+
+**Configuration:**
+
+Use `CitizenGlobalToolsPortlet` to specify which portlet should contain site tools:
+
+```php
+// In LocalSettings.php
+$wgCitizenGlobalToolsPortlet = 'navigation'; // Default is first portlet
+```
+
+### onSkinPageReadyConfig
+
+Tells MediaWiki's page ready module not to wire up search (Citizen handles it).
+
+```php
+public function onSkinPageReadyConfig(
+    ResourceLoader\Context $context,
+    array &$config
+): void
+```
+
+<ParamField path="context" type="ResourceLoader\Context" required>
+  ResourceLoader context
+</ParamField>
+
+<ParamField path="config" type="array" required>
+  Reference to configuration array
+</ParamField>
+
+**Effect:** Sets `$config['search'] = false` to prevent MediaWiki's default search initialization.
+
+### onSkinTemplateNavigation (static)
+
+Modifies navigation links for various menus with icons and styling.
+
+```php
+public static function onSkinTemplateNavigation(
+    SkinTemplate $sktemplate,
+    array &$links
+): void
+```
+
+<ParamField path="sktemplate" type="SkinTemplate" required>
+  The skin template instance
+</ParamField>
+
+<ParamField path="links" type="array" required>
+  Reference to navigation links array
+</ParamField>
+
+**Modifies these menus:**
+- `actions` - Page action menu (delete, move, protect, purge, etc.)
+- `associated-pages` - Namespace tabs (article, talk, user, etc.)
+- `TOOLBOX` - Toolbox menu (related changes, print, etc.)
+- `notifications` - Echo notifications (if installed)
+- `user-menu` - User menu
+- `user-interface-preferences` - UI preference menu
+- `views` - View/edit menu
+
+**Icon mappings include:**
+
+```php
+// Actions menu
+'delete' => 'trash'
+'move' => 'move'
+'protect' => 'lock'
+'purge' => 'reload'
+
+// Views menu
+'view' => 'eye'
+'edit' => 'edit'
+'history' => 'history'
+'ve-edit' => 'edit'
+
+// Associated pages
+'main' => 'article'
+'talk' => 'speechBubbles'
+'user' => 'userAvatar'
+```
+
+**Visual Editor handling:**
+
+When both VE and source edit are present:
+- Adds `citizen-ve-edit-merged` class to both buttons
+- Changes source edit icon from `edit` to `wikiText`
+- Makes edit buttons progressive primary instead of quiet
+
+**Usage Example:**
+
+```php
+// Hook is called automatically during navigation building
+// Called from SkinCitizen::runOnSkinTemplateNavigationHooks()
+```
+
+## ResourceLoaderHooks
+
+Provides configuration data to ResourceLoader modules.
+
+**Location:** `includes/Hooks/ResourceLoaderHooks.php`
+
+### getCitizenResourceLoaderConfig (static)
+
+Passes configuration to `skins.citizen.scripts` ResourceLoader module.
+
+```php
+public static function getCitizenResourceLoaderConfig(
+    ResourceLoader\Context $context,
+    Config $config
+): array
+```
+
+<ParamField path="context" type="ResourceLoader\Context" required>
+  ResourceLoader context
+</ParamField>
+
+<ParamField path="config" type="Config" required>
+  Configuration object
+</ParamField>
+
+<ResponseField name="return" type="array">
+  Configuration array with these keys:
+  - `wgCitizenEnablePreferences`: bool
+  - `wgCitizenOverflowInheritedClasses`: array
+  - `wgCitizenOverflowNowrapClasses`: array
+  - `wgCitizenSearchModule`: string
+  - `wgCitizenEnableCommandPalette`: bool
+</ResponseField>
+
+**Usage in JavaScript:**
+
+```javascript
+const config = require( './config.json' );
+if ( config.wgCitizenEnablePreferences ) {
+    // Enable preferences UI
+}
+```
+
+### getCitizenPreferencesResourceLoaderConfig (static)
+
+Passes configuration to `skins.citizen.preferences` ResourceLoader module.
+
+```php
+public static function getCitizenPreferencesResourceLoaderConfig(
+    ResourceLoader\Context $context,
+    Config $config
+): array
+```
+
+<ParamField path="context" type="ResourceLoader\Context" required>
+  ResourceLoader context
+</ParamField>
+
+<ParamField path="config" type="Config" required>
+  Configuration object
+</ParamField>
+
+<ResponseField name="return" type="array">
+  Configuration with `wgCitizenThemeDefault` key
+</ResponseField>
+
+### getCitizenSearchResourceLoaderConfig (static)
+
+Passes configuration to `skins.citizen.search` ResourceLoader module.
+
+```php
+public static function getCitizenSearchResourceLoaderConfig(
+    ResourceLoader\Context $context,
+    Config $config
+): array
+```
+
+<ParamField path="context" type="ResourceLoader\Context" required>
+  ResourceLoader context
+</ParamField>
+
+<ParamField path="config" type="Config" required>
+  Configuration object
+</ParamField>
+
+<ResponseField name="return" type="array">
+  Configuration array:
+  - `isAdvancedSearchExtensionEnabled`: bool
+  - `isMediaSearchExtensionEnabled`: bool
+  - `wgCitizenSearchGateway`: string
+  - `wgCitizenSearchDescriptionSource`: string
+  - `wgCitizenMaxSearchResults`: int
+  - `wgScriptPath`: string
+  - `wgSearchSuggestCacheExpiry`: int
+</ResponseField>
+
+### getCitizenCommandPaletteResourceLoaderConfig (static)
+
+Passes configuration to `skins.citizen.commandPalette` ResourceLoader module.
+
+```php
+public static function getCitizenCommandPaletteResourceLoaderConfig(
+    ResourceLoader\Context $context,
+    Config $config
+): array
+```
+
+<ParamField path="context" type="ResourceLoader\Context" required>
+  ResourceLoader context
+</ParamField>
+
+<ParamField path="config" type="Config" required>
+  Configuration object
+</ParamField>
+
+<ResponseField name="return" type="array">
+  Configuration with extension status and cache settings:
+  - `isMediaSearchExtensionEnabled`: bool
+  - `wgSearchSuggestCacheExpiry`: int
+</ResponseField>
+
+### getCitizenPreferencesOverrides (static)
+
+Returns on-wiki preference overrides with resolved message texts.
+
+```php
+public static function getCitizenPreferencesOverrides(
+    ResourceLoader\Context $context,
+    Config $config
+): array
+```
+
+<ParamField path="context" type="ResourceLoader\Context" required>
+  ResourceLoader context
+</ParamField>
+
+<ParamField path="config" type="Config" required>
+  Configuration object
+</ParamField>
+
+<ResponseField name="return" type="array">
+  Preference overrides with structure:
+  ```php
+  [
+      'overrides' => ?array,
+      'messages' => stdClass|array<string, string>
+  ]
+  ```
+</ResponseField>
+
+**Purpose:** Allows on-wiki customization of preferences through MediaWiki pages.
+
+## Registering Hooks
+
+Hooks are registered in `skin.json` under the `Hooks` section:
+
+```json
+{
+  "Hooks": {
+    "BeforePageDisplay": "MediaWiki\\Skins\\Citizen\\Hooks\\SkinHooks",
+    "SkinBuildSidebar": "MediaWiki\\Skins\\Citizen\\Hooks\\SkinHooks"
+  }
+}
+```
+
+## Related
+
+- [SkinCitizen](/api/skin-citizen) - Main skin class that uses these hooks
+- [Components](/api/components) - Components that hooks modify
+- [MediaWiki Hooks Documentation](https://www.mediawiki.org/wiki/Manual:Hooks)

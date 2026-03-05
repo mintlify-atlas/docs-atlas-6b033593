@@ -1,0 +1,354 @@
+---
+title: Installation
+description: Step-by-step guide to installing the Citizen skin on your MediaWiki site
+---
+
+# Installation
+
+Ready to give your wiki a fresh look? Follow these steps to install Citizen.
+
+<Note>
+  Before you begin, ensure your MediaWiki installation meets the [requirements](/requirements).
+</Note>
+
+## Installation Methods
+
+Choose the method that best fits your workflow:
+
+<Tabs>
+  <Tab title="Manual Installation">
+    The manual method is recommended for most users and production environments.
+
+    <Steps>
+      <Step title="Download the skin">
+        Download the [latest release](https://github.com/StarCitizenTools/mediawiki-skins-Citizen/archive/main.zip) from GitHub.
+      </Step>
+
+      <Step title="Extract to skins directory">
+        Extract the contents into a directory called `Citizen` in your MediaWiki `skins/` folder:
+
+        ```bash
+        cd /path/to/mediawiki
+        unzip mediawiki-skins-Citizen-main.zip
+        mv mediawiki-skins-Citizen-main skins/Citizen
+        ```
+
+        Your directory structure should look like this:
+
+        ```text
+        mediawiki/
+        └── skins/
+            └── Citizen/
+                ├── skin.json
+                ├── i18n/
+                ├── includes/
+                ├── resources/
+                ├── templates/
+                └── ...
+        ```
+      </Step>
+
+      <Step title="Load the skin">
+        Add this line to the bottom of your `LocalSettings.php`:
+
+        ```php LocalSettings.php
+        wfLoadSkin( 'Citizen' );
+        ```
+      </Step>
+
+      <Step title="Verify installation">
+        Navigate to `Special:Version` on your wiki to verify that Citizen appears in the "Installed skins" section.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Composer">
+    Composer is ideal for automated deployments and keeping your skin up to date.
+
+    <Steps>
+      <Step title="Require the package">
+        Run the following command in the root of your MediaWiki installation:
+
+        ```bash
+        COMPOSER=composer.local.json composer require starcitizentools/citizen-skin
+        ```
+      </Step>
+
+      <Step title="Update dependencies">
+        Update your dependencies (use `--no-dev` for production):
+
+        ```bash
+        composer update --no-dev
+        ```
+      </Step>
+
+      <Step title="Load the skin">
+        Add this line to the bottom of your `LocalSettings.php`:
+
+        ```php LocalSettings.php
+        wfLoadSkin( 'Citizen' );
+        ```
+      </Step>
+
+      <Step title="Verify installation">
+        Navigate to `Special:Version` to confirm Citizen is installed.
+      </Step>
+    </Steps>
+
+    <Note>
+      The Composer package is defined in `composer.json`:
+
+      ```json
+      {
+        "name": "starcitizentools/citizen-skin",
+        "type": "mediawiki-skin",
+        "description": "A beautiful, usable, responsive MediaWiki skin with in-depth extension support.",
+        "license": "GPL-3.0-or-later"
+      }
+      ```
+    </Note>
+  </Tab>
+
+  <Tab title="Git">
+    Git is useful for developers who want to contribute or track specific versions.
+
+    <Steps>
+      <Step title="Clone the repository">
+        Run this command in the root of your MediaWiki installation:
+
+        ```bash
+        git clone https://github.com/StarCitizenTools/mediawiki-skins-Citizen.git skins/Citizen
+        ```
+      </Step>
+
+      <Step title="Load the skin">
+        Add this line to the bottom of your `LocalSettings.php`:
+
+        ```php LocalSettings.php
+        wfLoadSkin( 'Citizen' );
+        ```
+      </Step>
+
+      <Step title="Link commits to GitHub (optional)">
+        To make commit IDs in `Special:Version` clickable links to GitHub, add:
+
+        ```php LocalSettings.php
+        $wgGitRepositoryViewers['https://github.com/(.*?)(.git)?'] = 
+            'https://github.com/$1/commit/%H';
+        ```
+      </Step>
+
+      <Step title="Verify installation">
+        Navigate to `Special:Version`. The current commit ID should be displayed.
+      </Step>
+    </Steps>
+
+    <Warning>
+      The Git repository includes development files (tests, configuration, documentation source). For production environments where file size matters, consider using the **Manual** or **Composer** methods instead.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## Activation
+
+Once installed, you'll need to activate Citizen as your wiki's default skin.
+
+### Set as Default Skin
+
+To make Citizen the default for all users, add this to your `LocalSettings.php`:
+
+```php LocalSettings.php
+$wgDefaultSkin = 'citizen';
+```
+
+<Note>
+  The skin name must be lowercase in `$wgDefaultSkin`, even though the directory is capitalized.
+</Note>
+
+### Verify Activation
+
+After saving `LocalSettings.php`, your wiki should now use the Citizen skin. You can verify this by:
+
+1. Visiting your wiki's homepage
+2. Checking that the Citizen interface appears
+3. Confirming in `Special:Version` that Citizen is listed as the default skin
+
+## Configuration
+
+Citizen works out of the box without additional configuration, but you can customize it to match your needs.
+
+### Basic Customization
+
+Here's a minimal configuration example:
+
+```php LocalSettings.php
+// Load and activate Citizen
+wfLoadSkin( 'Citizen' );
+$wgDefaultSkin = 'citizen';
+
+// Set default theme
+$wgCitizenThemeDefault = 'auto'; // 'light', 'dark', or 'auto'
+
+// Customize theme color (mobile address bar)
+$wgCitizenThemeColor = '#0d0e12';
+
+// Enable features
+$wgCitizenEnableCollapsibleSections = true;
+$wgCitizenEnableCommandPalette = true;
+$wgCitizenEnablePreferences = true;
+```
+
+### Header Position
+
+Customize where the header appears on desktop:
+
+```php LocalSettings.php
+$wgCitizenHeaderPosition = 'left'; // 'left', 'right', 'top', or 'bottom'
+```
+
+### Progressive Web App
+
+Enable PWA features for installable wiki apps:
+
+```php LocalSettings.php
+$wgCitizenEnableManifest = true;
+$wgCitizenManifestOptions = [
+    'background_color' => '#0d0e12',
+    'theme_color' => '#0d0e12',
+    'short_name' => 'MyWiki',
+    'description' => 'My awesome wiki',
+    'icons' => [
+        [
+            'src' => '/path/to/icon-192.png',
+            'sizes' => '192x192',
+            'type' => 'image/png'
+        ],
+        [
+            'src' => '/path/to/icon-512.png',
+            'sizes' => '512x512',
+            'type' => 'image/png'
+        ]
+    ]
+];
+```
+
+<Note>
+  For a complete list of configuration options, see the [Configuration Guide](https://starcitizentools.github.io/mediawiki-skins-Citizen/config/).
+</Note>
+
+## Recommended Extensions
+
+These extensions enhance Citizen's features (all are optional):
+
+<CardGroup cols={2}>
+  <Card title="PageImages" icon="image">
+    Adds images to search suggestion results (bundled with MediaWiki)
+  </Card>
+  <Card title="TextExtracts" icon="text">
+    Adds descriptions to search suggestions (bundled with MediaWiki)
+  </Card>
+  <Card title="ShortDescription" icon="file-lines">
+    Adds short descriptions under page titles
+  </Card>
+  <Card title="TemplateStylesExtender" icon="code">
+    Allows CSS variables in TemplateStyles, including Citizen's design tokens
+  </Card>
+</CardGroup>
+
+### Installing Extensions
+
+```php LocalSettings.php
+// PageImages and TextExtracts (bundled with MediaWiki)
+wfLoadExtension( 'PageImages' );
+wfLoadExtension( 'TextExtracts' );
+
+// Configure Citizen to use them
+$wgCitizenSearchDescriptionSource = 'textextracts';
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Skin doesn't appear after installation">
+    1. Verify `wfLoadSkin( 'Citizen' );` is in `LocalSettings.php`
+    2. Check that the `Citizen` directory exists in `skins/`
+    3. Ensure `skin.json` is present in `skins/Citizen/`
+    4. Clear your browser cache and MediaWiki cache
+    5. Check file permissions (web server must be able to read the files)
+  </Accordion>
+
+  <Accordion title="Styles are broken or missing">
+    1. Check browser console for 404 errors
+    2. Verify `$wgResourceBasePath` is set correctly in `LocalSettings.php`
+    3. Clear MediaWiki's resource cache: `php maintenance/rebuildLocalisationCache.php`
+    4. Try accessing your wiki in an incognito/private window
+  </Accordion>
+
+  <Accordion title="Extensions don't have Citizen styling">
+    Citizen includes skin styles for 70+ extensions that are automatically loaded. If an extension isn't styled:
+
+    1. Verify the extension is properly installed and loaded
+    2. Check if the extension is [supported](https://github.com/StarCitizenTools/mediawiki-skins-Citizen#extensions)
+    3. The extension skin styles are defined in `skin.json` under `ResourceModuleSkinStyles`
+    4. Consider [contributing](https://github.com/StarCitizenTools/mediawiki-skins-Citizen/blob/main/CONTRIBUTING.md) skin styles for unsupported extensions
+  </Accordion>
+
+  <Accordion title="Command palette doesn't work">
+    1. Verify `$wgCitizenEnableCommandPalette = true;` in `LocalSettings.php`
+    2. Check browser console for JavaScript errors
+    3. Ensure MediaWiki 1.43.0+ is installed (required for Codex components)
+    4. Try disabling other skins/extensions that might conflict
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+  If you encounter issues not listed here, please check the [issue tracker](https://github.com/StarCitizenTools/mediawiki-skins-Citizen/issues) or create a new issue with details about your environment.
+</Warning>
+
+## Updating
+
+Keep Citizen up to date to get the latest features and fixes:
+
+<Tabs>
+  <Tab title="Manual Updates">
+    1. Download the latest release
+    2. Back up your current `skins/Citizen/` directory
+    3. Extract and replace with the new version
+    4. Clear MediaWiki cache: `php maintenance/update.php`
+  </Tab>
+
+  <Tab title="Composer Updates">
+    ```bash
+    composer update starcitizentools/citizen-skin --no-dev
+    php maintenance/update.php
+    ```
+  </Tab>
+
+  <Tab title="Git Updates">
+    ```bash
+    cd skins/Citizen
+    git pull origin main
+    cd ../..
+    php maintenance/update.php
+    ```
+  </Tab>
+</Tabs>
+
+## Next Steps
+
+Now that Citizen is installed, explore these resources:
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="https://starcitizentools.github.io/mediawiki-skins-Citizen/config/">
+    Customize colors, layout, and features
+  </Card>
+  <Card title="Extension Support" icon="puzzle-piece" href="https://starcitizentools.github.io/mediawiki-skins-Citizen/config/extensions">
+    Learn about styled extensions
+  </Card>
+  <Card title="Customization" icon="palette" href="https://starcitizentools.github.io/mediawiki-skins-Citizen/customization/theming">
+    Theming and personalization options
+  </Card>
+  <Card title="Contributing" icon="code" href="https://github.com/StarCitizenTools/mediawiki-skins-Citizen/blob/main/CONTRIBUTING.md">
+    Help improve Citizen
+  </Card>
+</CardGroup>

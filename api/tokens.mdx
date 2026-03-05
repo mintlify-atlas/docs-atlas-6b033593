@@ -1,0 +1,518 @@
+---
+title: Design Tokens
+description: Overview of the Citizen design token system and theming architecture
+---
+
+Citizen uses a comprehensive design token system built on CSS custom properties to provide a consistent, themeable design language across the entire skin.
+
+## Architecture
+
+The token system is organized into several layers:
+
+```
+tokens.less (entry point)
+├── tokens-codex.less (Codex Design Tokens overrides)
+├── tokens-citizen.less (Citizen-specific tokens)
+│   ├── tokens-theme-base.less (Base theme definitions)
+│   └── tokens-theme-dark.less (Dark theme overrides)
+└── variables.less (LESS variables for backwards compatibility)
+```
+
+## Token Files
+
+### `tokens.less`
+
+The main entry point that imports all token files:
+
+```less
+@import 'tokens-codex.less';
+@import 'tokens-citizen.less';
+```
+
+**Usage:** Import this file when you need access to all CSS custom properties.
+
+```less
+@import 'skins.citizen.styles/tokens.less';
+
+.my-component {
+  background-color: var(--color-surface-1);
+  color: var(--color-base);
+}
+```
+
+### `tokens-citizen.less`
+
+Defines Citizen-specific design tokens including:
+
+- Layout and spacing scale
+- Citizen font families
+- Header positioning system
+- Size variables
+- Transition timings
+- Transform effects
+- Border and shadow tokens
+
+**Key Features:**
+- Applies `.theme-base()` mixin to `:root`
+- Responsive token adjustments via media queries
+- Accessibility adaptations (contrast preferences)
+- Animation tokens (applied when `.citizen-animations-ready`)
+
+### `tokens-theme-base.less`
+
+Defines the base theme color system using the `.theme-base()` mixin:
+
+- **OKLCH color space** for perceptually uniform colors
+- **HSL fallbacks** for browser compatibility
+- Progressive color system
+- Surface color scales (0-4)
+- Text color hierarchy
+- State colors (destructive, success, warning)
+- Syntax highlighting colors
+
+**Color Philosophy:**
+
+```less
+// Progressive color (brand accent)
+--color-progressive-oklch__l: 53.25%;  // Lightness
+--color-progressive-oklch__c: 0.1679;  // Chroma (saturation)
+--color-progressive-oklch__h: 262.29;  // Hue
+
+// Surface colors inherit the progressive hue
+--color-surface-0: oklch(
+  var(--color-surface-0-oklch__l)
+  var(--color-surface-0-oklch__c)
+  var(--color-progressive-oklch__h)  // Creates subtle tinting
+);
+```
+
+### `tokens-theme-dark.less`
+
+Defines dark theme overrides using the `.theme-dark()` mixin:
+
+- Inverted lightness values
+- Adjusted surface progression (lighter instead of darker)
+- Higher contrast syntax colors
+- Modified opacity and shadow values
+- Inverted filter effects
+
+**Applied via:**
+
+```css
+/* User preference */
+html.skin-theme-clientpref-night {
+  /* Dark theme tokens */
+}
+
+/* System preference */
+@media (prefers-color-scheme: dark) {
+  html.skin-theme-clientpref-os {
+    /* Dark theme tokens */
+  }
+}
+```
+
+### `tokens-codex.less`
+
+Overrides Codex Design Tokens to integrate with Citizen's color system:
+
+- Maps Codex semantic tokens to Citizen color primitives
+- Backports Codex 2.0 typography tokens for MediaWiki 1.43 compatibility
+- Provides multiple font size modes (small, medium, large, x-large)
+
+**Example Mapping:**
+
+```less
+:root {
+  // Codex semantic tokens use Citizen primitives
+  --color-base: oklch(
+    var(--color-base-oklch__l)
+    var(--color-base-oklch__c)
+    var(--color-progressive-oklch__h)
+  );
+  
+  --background-color-base: var(--color-surface-0);
+  --background-color-neutral: var(--color-surface-2);
+  --background-color-interactive: var(--color-surface-2);
+}
+```
+
+### `variables.less`
+
+LESS variables for backwards compatibility and when LESS-specific features are needed:
+
+```less
+// Spacing
+@space-unit: 1rem;
+
+// Fonts
+@font-family-base: var(--font-family-citizen-base), system-ui, sans-serif;
+@font-family-serif: var(--font-family-citizen-serif), 'Linux Libertine', serif;
+@font-family-monospace: var(--font-family-citizen-monospace), 'Menlo', monospace;
+
+// Layout
+@size-icon: 1.25rem;
+@header-size: 3.5rem;
+@width-layout: 1080px;
+@width-toc: 240px;
+@padding-page: 16px;
+
+// Transitions
+@transition-hover: var(--transition-duration-base) var(--transition-timing-function-ease);
+@transition-menu: var(--transition-duration-medium) var(--transition-timing-function-ease-out);
+
+// Syntax highlighting colors
+@color-syntax-red: #e53935;
+@color-syntax-blue: #6182b8;
+// ... (24 total syntax colors for light + dark themes)
+
+// Legacy colors (deprecated, used by some extensions)
+@dark-bg-10: #1d2129;
+@dark-bg-20: #22262d;
+// ...
+```
+
+**When to use:**
+- Need LESS mixins or functions
+- Working with MediaWiki skin variables
+- Extension compatibility
+
+**Prefer CSS custom properties when possible:**
+
+```less
+// ❌ Avoid
+@import 'variables.less';
+.component {
+  color: @color-syntax-red;
+}
+
+// ✅ Prefer
+@import 'tokens.less';
+.component {
+  color: var(--color-syntax-red);
+}
+```
+
+## Color System
+
+### OKLCH Color Space
+
+Citizen uses OKLCH for perceptually uniform colors:
+
+- **L** (Lightness): 0-100%, perceptually uniform
+- **C** (Chroma): 0-0.4, color intensity
+- **H** (Hue): 0-360, color angle
+
+**Benefits:**
+- Consistent perceived brightness across hues
+- More vibrant colors than sRGB
+- Better for programmatic color manipulation
+
+**Browser Support:**
+- Modern browsers: OKLCH native support
+- Fallback: HSL (automatically applied via `@supports`)
+
+### Progressive Color
+
+The primary accent color that influences the entire color system:
+
+```css
+/* Light theme */
+--color-progressive-oklch__h: 262.29;  /* Blue-violet hue */
+--color-progressive-oklch__c: 0.1679;  /* Moderate saturation */
+--color-progressive-oklch__l: 53.25%;  /* Medium lightness */
+
+/* Dark theme */
+--color-progressive-oklch__l: 60%;     /* Slightly lighter */
+```
+
+**Used for:**
+- Links and interactive elements
+- Primary buttons
+- Surface tinting (subtle accent on backgrounds)
+- Focus indicators
+
+### Surface Colors
+
+A scale of background colors with progressive tinting:
+
+| Level | Usage | Light L | Dark L |
+|-------|-------|---------|--------|
+| **Surface 0** | Page background | 96% | 14% |
+| **Surface 1** | Cards, panels | 94% | 16% |
+| **Surface 2** | Interactive elements | 92% | 18% |
+| **Surface 3** | Disabled backgrounds | 90% | 20% |
+| **Surface 4** | Elevated surfaces | 88% | 22% |
+
+**Each surface includes:**
+- Base color
+- Hover state (+4% lightness shift)
+- Active state (-4% lightness shift)
+
+### Text Colors
+
+Hierarchical text colors with progressive hue influence:
+
+| Token | Light L | Dark L | Usage |
+|-------|---------|--------|-------|
+| `--color-emphasized` | 5% | 93% | Headings, emphasis |
+| `--color-base` | 20% | 80% | Body text |
+| `--color-subtle` | 35% | 70% | Secondary text |
+| `--color-placeholder` | 40% | 60% | Placeholders |
+| `--color-disabled` | 60% | 50% | Disabled text |
+
+## Responsive Tokens
+
+Some tokens automatically adjust at different breakpoints:
+
+```css
+:root {
+  --padding-page: 16px;  /* Mobile default */
+}
+
+@media (min-width: 720px) {  /* Tablet */
+  :root {
+    --padding-page: 24px;
+  }
+}
+
+@media (min-width: 1000px) {  /* Desktop */
+  :root {
+    --padding-page: 32px;
+  }
+}
+```
+
+**Responsive tokens:**
+- `--padding-page`: 16px → 24px → 32px
+- `--header-card-maxheight`: 80vh → calc(100vh - spacing)
+- Header position variables (changes based on configuration)
+
+## Accessibility Features
+
+### Contrast Preferences
+
+```css
+@media (prefers-contrast: more) {
+  :root {
+    --font-weight-normal: 500;  /* Increased from 400 */
+  }
+}
+
+@media (prefers-contrast: less) {
+  :root {
+    --font-weight-normal: 300;  /* Decreased from 400 */
+  }
+}
+```
+
+### Reduced Motion
+
+Transitions are only applied when animations are ready:
+
+```css
+/* No transitions by default */
+:root {
+  --transition-hover: unset;
+}
+
+/* Applied when page is ready */
+.citizen-animations-ready {
+  --transition-hover: 100ms cubic-bezier(0.44, 0.21, 0, 1);
+  --transition-menu: 250ms cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+```
+
+### Color Scheme
+
+```css
+.theme-base() {
+  color-scheme: light;
+}
+
+.theme-dark() {
+  color-scheme: dark;
+}
+```
+
+This signals to browsers to use appropriate native controls and scrollbars.
+
+## Breakpoints
+
+Citizen uses MediaWiki's standard breakpoint system:
+
+| Breakpoint | Min Width | Max Width | Usage |
+|------------|-----------|-----------|-------|
+| **Mobile** | — | 719.98px | Single column, bottom nav |
+| **Tablet** | 720px | 999.98px | Two columns, responsive nav |
+| **Desktop** | 1000px | 1279.98px | Full layout, side navigation |
+| **Desktop Wide** | 1280px | — | Extended content width |
+
+**Available as LESS variables:**
+
+```less
+@min-width-breakpoint-tablet: 720px;
+@min-width-breakpoint-desktop: 1000px;
+@min-width-breakpoint-desktop-wide: 1280px;
+
+@max-width-breakpoint-mobile: 719.98px;
+@max-width-breakpoint-tablet: 999.98px;
+@max-width-breakpoint-desktop: 1279.98px;
+```
+
+**Usage:**
+
+```less
+.component {
+  padding: var(--space-sm);
+  
+  @media (min-width: @min-width-breakpoint-tablet) {
+    padding: var(--space-md);
+  }
+  
+  @media (min-width: @min-width-breakpoint-desktop) {
+    padding: var(--space-lg);
+  }
+}
+```
+
+## Typography Scale
+
+Citizen provides multiple typography modes via Codex mixins:
+
+### Medium Mode (Default)
+
+| Size | Font Size | Line Height | Usage |
+|------|-----------|-------------|-------|
+| xxx-large | 1.75rem (28px) | 2.375rem (38px) | H1 |
+| xx-large | 1.5rem (24px) | 2.125rem (34px) | H2 |
+| x-large | 1.25rem (20px) | 1.875rem (30px) | H3 |
+| large | 1.125rem (18px) | 1.75rem (28px) | H4 |
+| medium | 1rem (16px) | 1.625rem (26px) | Body |
+| small | 0.875rem (14px) | 1.375rem (22px) | Small text |
+| x-small | 0.75rem (12px) | 1.25rem (20px) | Fine print |
+
+**Other modes available:**
+- `.cdx-mode-small()` - Compact interfaces
+- `.cdx-mode-large()` - Better readability
+- `.cdx-mode-x-large()` - Accessibility focus
+
+## Theme Switching
+
+Citizen supports three theme modes:
+
+1. **Auto (OS)** - Follows system preference
+2. **Light** - Force light theme
+3. **Dark** - Force dark theme
+
+**Implementation:**
+
+```less
+// Base theme applied to :root
+:root {
+  .theme-base();
+}
+
+// Dark theme for explicit night mode
+html.skin-theme-clientpref-night {
+  .theme-dark();
+}
+
+// Dark theme for OS preference
+@media (prefers-color-scheme: dark) {
+  html.skin-theme-clientpref-os {
+    .theme-dark();
+  }
+}
+```
+
+## Customizing Tokens
+
+### Wiki-wide Customization
+
+Add custom CSS to `MediaWiki:Common.css`:
+
+```css
+:root {
+  /* Change accent color to red */
+  --color-progressive-oklch__h: 20;
+  --color-progressive-oklch__c: 0.15;
+  --color-progressive-oklch__l: 55%;
+  
+  /* Increase spacing scale */
+  --space-unit: 1.25rem;
+  
+  /* Custom layout width */
+  --width-layout: 1200px;
+}
+```
+
+### Per-page Customization
+
+```html
+<style>
+  .my-special-page {
+    --color-surface-0: var(--color-surface-1);
+    --font-size-medium: 1.125rem;
+  }
+</style>
+```
+
+### Extension Integration
+
+Extensions can use Citizen tokens for consistent styling:
+
+```less
+// In your extension LESS file
+.my-extension-component {
+  background-color: var(--color-surface-1);
+  color: var(--color-base);
+  border: var(--border-base);
+  border-radius: var(--border-radius-medium);
+  padding: var(--space-md);
+  box-shadow: var(--box-shadow-medium);
+}
+
+.my-extension-button {
+  background-color: var(--background-color-progressive);
+  color: var(--color-inverted-primary);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--border-radius-base);
+  transition: background-color var(--transition-duration-base) var(--transition-timing-function-ease);
+  
+  &:hover {
+    background-color: var(--background-color-progressive--hover);
+  }
+}
+```
+
+## Token Reference
+
+For complete token listings, see:
+
+- [CSS Variables](/api/css-variables) - All available CSS custom properties
+- [LESS Mixins](/api/less-mixins) - Reusable styling utilities
+
+## Best Practices
+
+### ✅ Do
+
+- Use CSS custom properties for runtime values
+- Leverage semantic tokens (`--color-base`, `--background-color-interactive`)
+- Use spacing scale for consistent spacing
+- Respect theme switching
+- Test in both light and dark themes
+
+### ❌ Don't
+
+- Hardcode colors or spacing values
+- Override tokens without considering theme switching
+- Use LESS variables when CSS custom properties are available
+- Create custom color scales (use surface/text hierarchies)
+- Ignore responsive behavior of tokens
+
+## Related Resources
+
+- [Codex Design Tokens](https://doc.wikimedia.org/codex/latest/design-tokens/) - Upstream token system
+- [OKLCH Color Space](https://oklch.com/) - Color space calculator
+- [MediaWiki Skin Variables](https://www.mediawiki.org/wiki/Manual:Skin_variables) - Upstream skin tokens

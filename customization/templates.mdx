@@ -1,0 +1,469 @@
+---
+title: Template Structure
+description: Understanding and customizing Mustache templates in the Citizen skin
+---
+
+Citizen uses [Mustache](https://mustache.github.io/) templates for rendering the HTML structure of the skin. This guide explains the template system and how to customize or extend templates.
+
+## Template Architecture
+
+The skin is built on MediaWiki's `SkinMustache` framework, which provides a structured way to render skin components using Mustache templates.
+
+### Template Location
+
+All templates are located in the `templates/` directory:
+
+```
+templates/
+├── Button.mustache
+├── Drawer.mustache
+├── Footer.mustache
+├── Header.mustache
+├── Icon.mustache
+├── Menu.mustache
+└── ... (43 total templates)
+```
+
+### Template Hierarchy
+
+Templates use partials (sub-templates) to compose complex UI components:
+
+```
+Header.mustache
+├── {{>Header__logo}}
+├── {{>Search}}
+├── {{>Drawer}}
+│   ├── {{>Drawer__button}}
+│   ├── {{>Drawer__logo}}
+│   └── {{>MainMenu}}
+└── {{>UserMenu}}
+```
+
+## Key Templates
+
+### Header Template
+
+The main header component containing site navigation.
+
+**File**: `templates/Header.mustache`
+
+```mustache
+{{!
+  string link-mainpage link to the main page
+  string msg-citizen-drawer-toggle The label used by the drawer button
+}}
+<header class="mw-header citizen-header">
+  {{>Header__logo}}
+  {{#data-search-box}}{{>Search}}{{/data-search-box}}
+  {{>Drawer}}
+  <div class="citizen-header__inner">
+    <div class="citizen-header__start"></div>
+    <div class="citizen-header__end">
+      {{>Preferences}}
+      {{#data-portlets.data-notifications}}{{>Menu}}{{/data-portlets.data-notifications}}
+      {{>UserMenu}}
+    </div>
+  </div>
+</header>
+```
+
+**Data structure**: Receives header data from `SkinCitizen::getTemplateData()`
+
+### Drawer Template
+
+The collapsible navigation drawer/sidebar.
+
+**File**: `templates/Drawer.mustache`
+
+```mustache
+{{!
+  string msg-citizen-drawer-toggle The label used by the drawer button.
+  string msg-sitetitle the contents of the sitesubtitle message key
+}}
+<div class="citizen-drawer citizen-header__item citizen-dropdown">
+  <details class="citizen-dropdown-details">
+    {{>Drawer__button}}
+  </details>
+  <div id="citizen-drawer__card" class="citizen-drawer__card citizen-menu__card">
+    <div class="citizen-menu__card-content">
+      <header class="citizen-drawer__header">
+        {{>Drawer__logo}}
+        <div class="citizen-drawer__siteinfo">
+          {{#data-site-stats}}{{>SiteStats}}{{/data-site-stats}}
+          {{>Wordmark}}
+        </div>
+      </header>
+      {{#data-main-menu}}
+        {{>MainMenu}}
+      {{/data-main-menu}}
+    </div>
+  </div>
+</div>
+```
+
+**Features**:
+- Uses HTML `<details>` for native expand/collapse
+- Conditionally renders site stats
+- Includes main navigation menu
+
+### Footer Template
+
+Page footer with site information and links.
+
+**File**: `templates/Footer.mustache`
+
+```mustache
+{{!
+  @typedef object footerItem
+  @prop string id of list item element
+  @prop string html of list item
+  @prop footerItem[] items
+
+  @typedef object footerRow
+  @prop string className of list element
+  @prop string id of list element
+  @prop footerItem[] array-items
+
+  footerRow[] array-footer-rows iterable list of footer rows
+  footerRow[] array-footer-icons iterable list of footer icons
+}}
+<footer class="mw-footer citizen-footer" {{{html-user-language-attributes}}}>
+  <div class="citizen-footer__container">
+    <section class="citizen-footer__content">
+      <div class="citizen-footer__siteinfo">
+        <div id="footer-sitetitle" class="citizen-footer__sitetitle mw-wiki-title">
+          <img class="mw-logo-icon" src="{{>Logo_icon_src}}" alt="" aria-hidden="true">
+          {{>Wordmark}}
+        </div>
+        <p id="footer-desc" class="citizen-footer__desc">{{{msg-citizen-footer-desc}}}</p>
+      </div>
+      {{#data-places}}{{>Footer__row}}{{/data-places}}
+    </section>
+    <section class="citizen-footer__bottom">
+      <div id="footer-tagline">{{{msg-citizen-footer-tagline}}}</div>
+      {{#data-icons}}{{>Footer__row}}{{/data-icons}}
+    </section>
+  </div>
+</footer>
+```
+
+### Button Template
+
+Reusable button component.
+
+**File**: `templates/Button.mustache`
+
+```mustache
+<button class="{{class}}" {{#id}}id="{{id}}"{{/id}} {{#data-event-name}}data-event-name="{{data-event-name}}"{{/data-event-name}}>
+  {{#icon}}{{>Icon}}{{/icon}}
+  {{#label}}<span class="citizen-button__label">{{{label}}}</span>{{/label}}
+</button>
+```
+
+**Usage**: Generic button template with optional icon and label
+
+### Icon Template
+
+SVG icon rendering.
+
+**File**: `templates/Icon.mustache`
+
+```mustache
+<span class="citizen-ui-icon mw-ui-icon-wikimedia-{{icon}}"{{#data-icon-context}} data-icon-context="{{data-icon-context}}"{{/data-icon-context}}></span>
+```
+
+**Icons**: Uses MediaWiki's icon pack (see `skin.json` `skins.citizen.icons` module)
+
+### Menu Template
+
+Generic menu/dropdown component.
+
+**File**: `templates/Menu.mustache`
+
+```mustache
+<div class="{{class}}">
+  {{>MenuContents}}
+</div>
+```
+
+## Template Data
+
+Templates receive data from PHP through the `SkinCitizen` class.
+
+### Data Flow
+
+```
+SkinCitizen.php (PHP)
+  └─> getTemplateData()
+      └─> Mustache Template
+          └─> HTML Output
+```
+
+### Common Data Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `html-*` | string | Raw HTML content (triple-mustache) |
+| `msg-*` | string | Localized message text |
+| `data-*` | object/array | Structured data objects |
+| `array-*` | array | Iterable lists |
+| `is-*` | boolean | Conditional flags |
+| `link-*` | string | URL/href values |
+
+### Example: Menu Data
+
+```php
+// In SkinCitizen.php
+$data['data-main-menu'] = [
+  'id' => 'p-navigation',
+  'label' => $this->msg('navigation-heading')->text(),
+  'array-items' => [
+    [
+      'id' => 'n-mainpage',
+      'html' => '<a href="/wiki/Main_Page">Main page</a>'
+    ],
+    // ... more items
+  ]
+];
+```
+
+```mustache
+{{! In Menu.mustache }}
+{{#data-main-menu}}
+<nav id="{{id}}" aria-label="{{label}}">
+  <ul>
+    {{#array-items}}
+    <li id="{{id}}">{{{html}}}</li>
+    {{/array-items}}
+  </ul>
+</nav>
+{{/data-main-menu}}
+```
+
+## Customizing Templates
+
+### Method 1: Override Templates
+
+Create a child skin or extension that overrides specific templates:
+
+```php
+// In your extension's skin class
+class SkinCitizenCustom extends SkinCitizen {
+  public function getTemplateParser() {
+    return new TemplateParser(
+      __DIR__ . '/templates',
+      $this->getConfig()->get('UseDatabaseCache')
+    );
+  }
+}
+```
+
+Then place your custom templates in your extension's `templates/` directory.
+
+### Method 2: Modify Template Data
+
+Use hooks to modify the data passed to templates:
+
+```php
+// In your LocalSettings.php or extension
+$wgHooks['SkinTemplateNavigation::Universal'][] = function ( $sktemplate, &$links ) {
+  // Modify navigation links
+  $links['views']['custom'] = [
+    'text' => 'Custom Action',
+    'href' => '/custom',
+    'class' => 'custom-action'
+  ];
+};
+```
+
+### Method 3: JavaScript Enhancement
+
+Enhance templates with JavaScript after rendering:
+
+```javascript
+// In a ResourceLoader module
+mw.hook('wikipage.content').add(function($content) {
+  // Enhance rendered templates
+  $content.find('.citizen-drawer').each(function() {
+    // Add custom functionality
+  });
+});
+```
+
+## Template Patterns
+
+### Conditional Rendering
+
+```mustache
+{{! Only render if property exists }}
+{{#data-notifications}}
+  <div class="notifications">
+    {{>NotificationList}}
+  </div>
+{{/data-notifications}}
+
+{{! Render else block if property doesn't exist }}
+{{#has-items}}
+  <ul>{{#items}}<li>{{.}}</li>{{/items}}</ul>
+{{/has-items}}
+{{^has-items}}
+  <p>No items found.</p>
+{{/has-items}}
+```
+
+### Iteration
+
+```mustache
+{{! Loop through array }}
+{{#array-menu-items}}
+<li id="{{id}}" class="{{class}}">
+  <a href="{{href}}">{{{html}}}</a>
+</li>
+{{/array-menu-items}}
+```
+
+### Partials (Sub-templates)
+
+```mustache
+{{! Include another template }}
+{{>Icon}}
+
+{{! Pass context to partial }}
+{{#data-user}}
+  {{>UserAvatar}}
+{{/data-user}}
+```
+
+### Raw HTML
+
+```mustache
+{{! Escaped HTML (safe) }}
+{{text-content}}
+
+{{! Unescaped HTML (use with caution) }}
+{{{html-content}}}
+```
+
+## Creating Custom Components
+
+### 1. Create the Template
+
+```mustache
+{{! templates/CustomWidget.mustache }}
+<div class="custom-widget" data-widget-id="{{id}}">
+  <h3 class="custom-widget__title">{{title}}</h3>
+  <div class="custom-widget__content">
+    {{{content}}}
+  </div>
+  {{#actions}}
+  <div class="custom-widget__actions">
+    {{#array-buttons}}
+      {{>Button}}
+    {{/array-buttons}}
+  </div>
+  {{/actions}}
+</div>
+```
+
+### 2. Provide Template Data
+
+```php
+// In your skin or hook
+$data['data-custom-widget'] = [
+  'id' => 'my-widget',
+  'title' => $this->msg('custom-widget-title')->text(),
+  'content' => $this->getWidgetContent(),
+  'actions' => true,
+  'array-buttons' => [
+    [
+      'class' => 'custom-action-btn',
+      'label' => 'Click me',
+      'icon' => 'check'
+    ]
+  ]
+];
+```
+
+### 3. Include in Parent Template
+
+```mustache
+{{! In your page template }}
+{{#data-custom-widget}}
+  {{>CustomWidget}}
+{{/data-custom-widget}}
+```
+
+### 4. Add Styles
+
+```less
+// In your LESS file
+.custom-widget {
+  padding: var( --space-md );
+  background: var( --color-surface-1 );
+  border-radius: var( --border-radius-base );
+  
+  &__title {
+    font-size: var( --font-size-large );
+    font-weight: var( --font-weight-semi-bold );
+  }
+  
+  &__actions {
+    margin-top: var( --space-md );
+  }
+}
+```
+
+## Template Best Practices
+
+1. **Use semantic HTML** - Use appropriate HTML5 elements
+2. **Add ARIA labels** - Ensure accessibility with proper ARIA attributes
+3. **Follow naming conventions**:
+   - Components: `ComponentName.mustache`
+   - Sub-components: `ComponentName__part.mustache`
+4. **Document template data** - Use Mustache comments to document expected data
+5. **Keep templates focused** - Break complex templates into smaller partials
+6. **Avoid logic** - Keep templates presentational; logic belongs in PHP
+7. **Use CSS classes** - Follow BEM naming: `.citizen-component__element--modifier`
+
+## Template Comments
+
+Document your templates with Mustache comments:
+
+```mustache
+{{!
+  Component description
+  
+  @param {string} title - The widget title
+  @param {string} content - HTML content to display
+  @param {Object[]} array-buttons - Array of button objects
+  @param {string} array-buttons[].class - Button CSS class
+  @param {string} array-buttons[].label - Button label text
+}}
+```
+
+## Debugging Templates
+
+Enable debug mode to see template data:
+
+```php
+// LocalSettings.php
+$wgShowDebug = true;
+$wgDebugComments = true;
+```
+
+Or inspect the data passed to templates:
+
+```php
+// In SkinCitizen.php
+public function getTemplateData() {
+  $data = parent::getTemplateData();
+  wfDebugLog('citizen-template', json_encode($data));
+  return $data;
+}
+```
+
+## Related
+
+- [Resource Loader](/customization/resource-loader) - Loading template-related assets
+- [Theming](/customization/theming) - Styling template components
+- [MediaWiki SkinMustache](https://www.mediawiki.org/wiki/Manual:SkinMustache.php) - Base template system

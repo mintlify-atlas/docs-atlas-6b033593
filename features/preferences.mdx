@@ -1,0 +1,269 @@
+---
+title: "User Preferences"
+description: "Customize appearance and behavior with client-side preferences"
+---
+
+## Overview
+
+The Citizen skin includes a powerful preferences system that allows users to customize their experience without requiring an account. Preferences are stored locally in the browser and sync instantly across the interface.
+
+<Note>
+All preferences are client-side only - they're stored in the browser's localStorage and don't require server-side configuration.
+</Note>
+
+## Accessing Preferences
+
+Click the preferences toggle button in the header to open the preferences panel. The panel displays as a dropdown menu with organized sections.
+
+## Available Preferences
+
+### Appearance Section
+
+Customize the visual appearance of your wiki:
+
+#### Color Theme
+
+**Type:** Radio buttons (3 columns)  
+**Options:**
+- **Auto** - Follow system theme (light/dark based on OS settings)
+- **Light** - Always use light theme
+- **Dark** - Always use dark theme
+
+The theme preference includes visual previews showing the surface and text colors for each option.
+
+```javascript
+// Theme values in code
+'os'    // Auto (follows system)
+'day'   // Light mode
+'night' // Dark mode
+```
+
+#### Text Size
+
+**Type:** Select dropdown  
+**Options:**
+- Small
+- Standard (default)
+- Large
+- Extra large
+
+Adjusts the font size of body text for improved readability.
+
+#### Content Width
+
+**Type:** Select dropdown  
+**Options:**
+- Standard (default)
+- Wide
+- Full
+
+Controls the maximum width of the content area. Useful for large screens or reading preference.
+
+#### Pure Black Mode
+
+**Type:** Toggle switch  
+**Available:** Only visible in dark theme  
+
+Replaces dark gray backgrounds with pure black (#000000) for OLED screens and reduced eye strain.
+
+<Tip>
+Pure black mode can help save battery life on OLED/AMOLED displays and provides maximum contrast.
+</Tip>
+
+#### Image Dimming
+
+**Type:** Toggle switch  
+**Available:** Only visible in dark theme  
+
+Reduces the brightness of images in dark mode to prevent harsh contrast and improve reading comfort.
+
+### Behavior Section
+
+Control how the interface responds to your actions:
+
+#### Automatically Hide Navigation
+
+**Type:** Toggle switch  
+**Available:** Only on tablet viewports and larger  
+
+Automatically hides the navigation bar when scrolling down and shows it when scrolling up, providing more screen space for content.
+
+#### Performance Mode
+
+**Type:** Toggle switch  
+**Available:** Always  
+
+Reduces animations and visual effects for:
+- Improved performance on older devices
+- Users who prefer reduced motion
+- Better battery life on mobile devices
+
+<Note>
+Performance mode respects the `prefers-reduced-motion` CSS media query and system accessibility settings.
+</Note>
+
+## How Preferences Work
+
+### Storage
+
+Preferences are stored using MediaWiki's client preference API (or a polyfill):
+- Saved in browser localStorage
+- Persist across sessions
+- Device-specific (don't sync between devices)
+- Don't require a user account
+
+### Live Updates
+
+Preferences apply immediately:
+1. User toggles a preference
+2. Value is saved to localStorage
+3. CSS classes are updated on `<html>` element
+4. Interface reflects the change instantly
+5. `mw.hook('citizen.preferences.changed')` fires for extensions
+
+### CSS Classes
+
+Preferences apply CSS classes to enable visual changes:
+
+```html
+<!-- Theme preference -->
+<html class="skin-theme-clientpref-night">
+
+<!-- Font size preference -->
+<html class="citizen-feature-custom-font-size-clientpref-large">
+
+<!-- Width preference -->
+<html class="citizen-feature-custom-width-clientpref-wide">
+
+<!-- Pure black preference -->
+<html class="citizen-feature-pure-black-clientpref-1">
+```
+
+## Configuration
+
+### Default Preferences
+
+Defaults are defined in `resources/skins.citizen.preferences/defaultConfig.js`:
+
+```javascript
+preferences: {
+  'skin-theme': {
+    section: 'appearance',
+    options: [
+      { value: 'os', labelMsg: 'citizen-theme-os-label' },
+      { value: 'day', labelMsg: 'citizen-theme-day-label' },
+      { value: 'night', labelMsg: 'citizen-theme-night-label' }
+    ],
+    type: 'radio',
+    columns: 3
+  }
+}
+```
+
+### Adding Custom Preferences
+
+Administrators can add custom preferences via `MediaWiki:Citizen-preferences.json` or by using the registration hook:
+
+```javascript
+mw.hook('citizen.preferences.register').add(function(register) {
+  register({
+    sections: {
+      'my-section': {
+        labelMsg: 'my-section-label'
+      }
+    },
+    preferences: {
+      'my-feature': {
+        section: 'my-section',
+        type: 'switch',
+        labelMsg: 'my-feature-label',
+        options: ['0', '1']
+      }
+    }
+  });
+});
+```
+
+<Tip>
+Custom preferences automatically integrate with the existing UI and storage system - no additional JavaScript needed.
+</Tip>
+
+## Visibility Conditions
+
+Preferences can show/hide based on conditions:
+
+- `always` - Always visible
+- `dark-theme` - Only visible when dark theme is active
+- `tablet-viewport` - Only visible on tablet-sized screens and larger
+
+Example:
+```javascript
+visibilityCondition: 'dark-theme'
+```
+
+## Internationalization
+
+All preference labels and descriptions are translatable:
+
+```json
+{
+  "citizen-theme-name": "Color",
+  "citizen-theme-description": "Switch between light and dark mode",
+  "citizen-theme-day-label": "Light",
+  "citizen-theme-night-label": "Dark",
+  "citizen-theme-os-label": "Auto"
+}
+```
+
+Messages are defined in `i18n/en.json` and can be translated via MediaWiki's translation system.
+
+## Technical Implementation
+
+The preferences system is built with:
+
+- **Vue 3** with Composition API
+- **Codex components** (CdxToggleSwitch, CdxField, CdxSelect)
+- Reactive state management
+- localStorage persistence
+- CSS custom properties for theming
+
+### Architecture
+
+```
+init.js              → Initializes Vue app
+App.vue              → Main preferences UI
+defaultConfig.js     → Built-in preferences
+configRegistry.js    → Merges and normalizes config
+RadioGroup.vue       → Custom radio button component
+useVisibility.js     → Visibility condition logic
+clientPrefs.polyfill.js → Storage abstraction
+```
+
+## Best Practices
+
+<Tip>
+Provide reasonable defaults that work for most users. Users should only need to change preferences for specific needs.
+</Tip>
+
+<Note>
+Test your custom preferences in both light and dark themes to ensure consistent appearance.
+</Note>
+
+## Events and Hooks
+
+Developers can listen for preference changes:
+
+```javascript
+// Listen for any preference change
+mw.hook('citizen.preferences.changed').add(function(featureName, value) {
+  console.log('Preference changed:', featureName, '=', value);
+});
+
+// Example: React to theme changes
+mw.hook('citizen.preferences.changed').add(function(featureName, value) {
+  if (featureName === 'skin-theme') {
+    console.log('Theme changed to:', value);
+    // Update your extension's UI accordingly
+  }
+});
+```

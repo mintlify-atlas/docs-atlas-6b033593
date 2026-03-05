@@ -1,0 +1,327 @@
+---
+title: Component System
+description: Learn about the PHP component architecture in Citizen
+---
+
+## Overview
+
+Citizen uses a component-based architecture where reusable UI elements are encapsulated as PHP classes. Each component implements the `CitizenComponent` interface and generates data for Mustache templates.
+
+Components live in `includes/Components/` and provide a clean separation between data preparation (PHP) and presentation (Mustache templates).
+
+## Component Interface
+
+All components implement the `CitizenComponent` interface:
+
+```php
+namespace MediaWiki\Skins\Citizen\Components;
+
+interface CitizenComponent {
+    public function getTemplateData(): array;
+}
+```
+
+The `getTemplateData()` method returns an array of data that will be passed to the corresponding Mustache template.
+
+## Available Components
+
+Citizen includes the following built-in components:
+
+| Component | Purpose | Location |
+|-----------|---------|----------|
+| `CitizenComponentButton` | Codex button implementation | `includes/Components/CitizenComponentButton.php` |
+| `CitizenComponentLink` | Enhanced link element | `includes/Components/CitizenComponentLink.php` |
+| `CitizenComponentMenu` | Navigation menu | `includes/Components/CitizenComponentMenu.php` |
+| `CitizenComponentMainMenu` | Main navigation | `includes/Components/CitizenComponentMainMenu.php` |
+| `CitizenComponentSearchBox` | Search functionality | `includes/Components/CitizenComponentSearchBox.php` |
+| `CitizenComponentPageHeading` | Page title and metadata | `includes/Components/CitizenComponentPageHeading.php` |
+| `CitizenComponentPageTools` | Page action tools | `includes/Components/CitizenComponentPageTools.php` |
+| `CitizenComponentPageSidebar` | Sidebar content | `includes/Components/CitizenComponentPageSidebar.php` |
+| `CitizenComponentTableOfContents` | ToC generation | `includes/Components/CitizenComponentTableOfContents.php` |
+| `CitizenComponentStickyHeader` | Fixed header | `includes/Components/CitizenComponentStickyHeader.php` |
+| `CitizenComponentFooter` | Page footer | `includes/Components/CitizenComponentFooter.php` |
+| `CitizenComponentPageFooter` | Article footer | `includes/Components/CitizenComponentPageFooter.php` |
+| `CitizenComponentUserInfo` | User information | `includes/Components/CitizenComponentUserInfo.php` |
+| `CitizenComponentSiteStats` | Wiki statistics | `includes/Components/CitizenComponentSiteStats.php` |
+| `CitizenComponentBodyContent` | Article body | `includes/Components/CitizenComponentBodyContent.php` |
+| `CitizenComponentMenuListItem` | Menu item | `includes/Components/CitizenComponentMenuListItem.php` |
+| `CitizenComponentKeyboardHint` | Keyboard shortcuts | `includes/Components/CitizenComponentKeyboardHint.php` |
+
+## Creating a Component
+
+Here's an example of the `CitizenComponentButton` implementation:
+
+```php
+<?php
+
+declare( strict_types=1 );
+
+namespace MediaWiki\Skins\Citizen\Components;
+
+/**
+ * CitizenComponentButton component
+ *
+ * This implements the Codex CSS-only button component
+ * @see https://doc.wikimedia.org/codex/main/components/demos/button.html
+ */
+class CitizenComponentButton implements CitizenComponent {
+
+    public function __construct(
+        private string $label = '',
+        private ?string $icon = null,
+        private ?string $id = null,
+        private ?string $class = null,
+        private array $attributes = [],
+        private string $weight = 'normal',
+        private string $action = 'default',
+        private string $size = 'medium',
+        private bool $iconOnly = false,
+        private ?string $href = null
+    ) {
+        // Validate and normalize parameters
+        $this->weight = match ( $this->weight ) {
+            'primary', 'quiet' => $this->weight,
+            default => 'normal',
+        };
+        $this->action = match ( $this->action ) {
+            'progressive', 'destructive' => $this->action,
+            default => 'default',
+        };
+        $this->size = match ( $this->size ) {
+            'large' => 'large',
+            default => 'medium',
+        };
+    }
+
+    private function getClasses(): string {
+        $classes = 'cdx-button';
+        if ( $this->href ) {
+            $classes .= ' cdx-button--fake-button cdx-button--fake-button--enabled';
+        }
+        $classes .= match ( $this->weight ) {
+            'primary' => ' cdx-button--weight-primary',
+            'quiet' => ' cdx-button--weight-quiet',
+            default => ' cdx-button--weight-normal',
+        };
+        $classes .= match ( $this->action ) {
+            'progressive' => ' cdx-button--action-progressive',
+            'destructive' => ' cdx-button--action-destructive',
+            default => ' cdx-button--action-default',
+        };
+        $classes .= match ( $this->size ) {
+            'large' => ' cdx-button--size-large',
+            default => ' cdx-button--size-medium',
+        };
+        if ( $this->iconOnly ) {
+            $classes .= ' cdx-button--icon-only';
+        }
+        if ( $this->class ) {
+            $classes .= ' ' . $this->class;
+        }
+        return $classes;
+    }
+
+    public function getTemplateData(): array {
+        $arrayAttributes = [];
+        foreach ( $this->attributes as $key => $value ) {
+            if ( $value === null ) {
+                continue;
+            }
+            $arrayAttributes[] = [ 'key' => $key, 'value' => $value ];
+        }
+        return [
+            'label' => $this->label,
+            'icon' => $this->icon,
+            'id' => $this->id,
+            'class' => $this->getClasses(),
+            'href' => $this->href,
+            'array-attributes' => $arrayAttributes
+        ];
+    }
+}
+```
+
+## Component Conventions
+
+### 1. Constructor Parameters
+
+Use named parameters with type hints and default values:
+
+```php
+public function __construct(
+    private string $label = '',
+    private ?string $icon = null,
+    private bool $enabled = true
+) {
+    // Validation logic
+}
+```
+
+### 2. Parameter Validation
+
+Validate and normalize parameters in the constructor using `match` expressions:
+
+```php
+$this->weight = match ( $this->weight ) {
+    'primary', 'quiet' => $this->weight,
+    default => 'normal',
+};
+```
+
+### 3. Private Helper Methods
+
+Use private methods for complex logic like class generation:
+
+```php
+private function getClasses(): string {
+    $classes = 'base-class';
+    // Build class string
+    return $classes;
+}
+```
+
+### 4. Template Data Structure
+
+Return simple arrays that map directly to Mustache template variables:
+
+```php
+public function getTemplateData(): array {
+    return [
+        'id' => $this->id,
+        'label' => $this->label,
+        'class' => $this->getClasses(),
+        'array-attributes' => $this->buildAttributes()
+    ];
+}
+```
+
+### 5. Array Attributes
+
+For HTML attributes, use the array format expected by Mustache:
+
+```php
+$arrayAttributes = [];
+foreach ( $this->attributes as $key => $value ) {
+    if ( $value === null ) {
+        continue;
+    }
+    $arrayAttributes[] = [ 'key' => $key, 'value' => $value ];
+}
+```
+
+## Using Components
+
+Components are typically instantiated in the main `SkinCitizen` class or hook handlers:
+
+```php
+// In SkinCitizen.php or a hook handler
+$button = new CitizenComponentButton(
+    label: 'Edit',
+    icon: 'cdx-icon-edit',
+    weight: 'primary',
+    action: 'progressive',
+    href: $editUrl
+);
+
+$templateData['edit-button'] = $button->getTemplateData();
+```
+
+Then in the Mustache template:
+
+```mustache
+{{#edit-button}}
+  <a href="{{href}}" class="{{class}}" id="{{id}}">
+    {{#icon}}<span class="{{icon}}"></span>{{/icon}}
+    <span>{{label}}</span>
+  </a>
+{{/edit-button}}
+```
+
+## Codex Components
+
+Many Citizen components implement Codex design system patterns. When working with Codex:
+
+- Use the Codex version bundled with MediaWiki (minimum v1.14.0)
+- Reference [Codex documentation](https://doc.wikimedia.org/codex/main/) for component specs
+- List JS-based Codex components in `skin.json` under `CodexModule`
+
+## Testing Components
+
+Component tests go in `tests/phpunit/Components/`:
+
+```php
+namespace MediaWiki\Skins\Citizen\Tests\Components;
+
+use MediaWiki\Skins\Citizen\Components\CitizenComponentButton;
+
+/**
+ * @covers \MediaWiki\Skins\Citizen\Components\CitizenComponentButton
+ */
+class CitizenComponentButtonTest extends \MediaWikiUnitTestCase {
+
+    public function testGetTemplateData() {
+        // Arrange
+        $button = new CitizenComponentButton(
+            label: 'Test',
+            weight: 'primary'
+        );
+
+        // Act
+        $data = $button->getTemplateData();
+
+        // Assert
+        $this->assertSame( 'Test', $data['label'] );
+        $this->assertStringContainsString( 'cdx-button--weight-primary', $data['class'] );
+    }
+}
+```
+
+## Best Practices
+
+1. **Single Responsibility**: Each component should handle one UI element
+2. **Type Safety**: Use native PHP types for all parameters and return values
+3. **Immutability**: Components should not modify their state after construction
+4. **Validation**: Validate and normalize inputs in the constructor
+5. **Documentation**: Include PHPDoc with component purpose and Codex references
+6. **Testing**: Write unit tests covering all component variations
+7. **Avoid Boolean Parameters**: Use constants or named arrays instead
+
+## Adding a New Component
+
+<Steps>
+  <Step title="Create the component class">
+    Create a new file in `includes/Components/`:
+    
+    ```bash
+    touch includes/Components/CitizenComponentMyComponent.php
+    ```
+  </Step>
+
+  <Step title="Implement the interface">
+    Extend `CitizenComponent` with proper type hints and validation.
+  </Step>
+
+  <Step title="Create a test file">
+    Add tests in `tests/phpunit/Components/CitizenComponentMyComponentTest.php`.
+  </Step>
+
+  <Step title="Use the component">
+    Instantiate in `SkinCitizen.php` or appropriate hook handler.
+  </Step>
+
+  <Step title="Update templates">
+    Create or modify Mustache templates in `templates/` to use the component data.
+  </Step>
+
+  <Step title="Run tests">
+    ```bash
+    composer phpunit
+    ```
+  </Step>
+</Steps>
+
+## Next Steps
+
+- Review [Testing Guidelines](/development/testing)
+- Learn about [Architecture](/development/architecture)
+- Read the [Contributing Guide](/development/contributing)

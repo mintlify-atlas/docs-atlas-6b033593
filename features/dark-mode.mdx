@@ -1,0 +1,436 @@
+---
+title: "Dark Mode"
+description: "Comprehensive dark theme with customizable options and automatic detection"
+---
+
+## Overview
+
+The Citizen skin features a sophisticated dark mode implementation with support for automatic theme detection, manual selection, and additional dark theme enhancements. The theme system uses CSS custom properties for seamless switching and provides multiple customization options.
+
+<Note>
+Dark mode is part of the preferences system and requires no server-side configuration - it works entirely client-side.
+</Note>
+
+## Theme Options
+
+Users can choose from three theme modes:
+
+### Auto (System Theme)
+
+**Value:** `os`  
+Automatically follows the operating system's theme preference using the `prefers-color-scheme` CSS media query.
+
+```css
+@media (prefers-color-scheme: dark) {
+  /* Dark theme styles */
+}
+
+@media (prefers-color-scheme: light) {
+  /* Light theme styles */
+}
+```
+
+<Tip>
+Auto mode is the default and recommended setting. Users get the theme they expect based on their system preferences.
+</Tip>
+
+### Light (Day)
+
+**Value:** `day`  
+Always uses the light theme regardless of system preferences.
+
+### Dark (Night)
+
+**Value:** `night`  
+Always uses the dark theme regardless of system preferences.
+
+## Accessing Theme Settings
+
+1. Click the **preferences** button in the header
+2. Preferences panel opens
+3. Find **Color** under the **Appearance** section
+4. Select your preferred theme:
+   - **Auto** - Follow system theme
+   - **Light** - Always light
+   - **Dark** - Always dark
+5. Theme applies immediately
+
+<Note>
+Theme preference is stored in browser localStorage and persists across sessions.
+</Note>
+
+## Dark Theme Enhancements
+
+When dark theme is active (either via Auto or manual selection), additional preferences become available:
+
+### Pure Black Mode
+
+**Type:** Toggle switch  
+**Available:** Only in dark theme  
+
+Replaces the standard dark gray background (`#1a1a1a`) with pure black (`#000000`).
+
+**Benefits:**
+- **OLED/AMOLED displays** - Pixels fully turn off, saving battery
+- **Maximum contrast** - True black provides highest contrast ratio
+- **Reduced eye strain** - Some users prefer pure black backgrounds
+- **Battery savings** - OLED screens use less power with black pixels
+
+```css
+/* Standard dark mode */
+.skin-theme-clientpref-night {
+  --color-surface-0: #1a1a1a;
+}
+
+/* Pure black mode */
+.citizen-feature-pure-black-clientpref-1 {
+  --color-surface-0: #000000;
+}
+```
+
+<Tip>
+Enable Pure Black mode if you're using an OLED device for better battery life and deeper blacks.
+</Tip>
+
+### Image Dimming
+
+**Type:** Toggle switch  
+**Available:** Only in dark theme  
+
+Reduces the brightness of images to prevent harsh contrast in dark environments.
+
+**Purpose:**
+- **Reduce eye strain** - Bright images can be jarring in dark theme
+- **Better reading experience** - Maintains focus on text content
+- **Comfortable viewing** - Especially useful at night
+
+```css
+.citizen-feature-image-dimming-clientpref-1 img {
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+
+.citizen-feature-image-dimming-clientpref-1 img:hover {
+  opacity: 1;
+}
+```
+
+<Note>
+Image dimming uses CSS opacity to reduce brightness. Hovering over images temporarily restores full brightness.
+</Note>
+
+## Technical Implementation
+
+### CSS Custom Properties
+
+The theme system relies on CSS custom properties (CSS variables) for color values:
+
+```css
+:root {
+  /* Light theme colors */
+  --color-surface-0: #ffffff;
+  --color-base: #202122;
+  --color-subtle: #54595d;
+  /* ... more colors */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Dark theme colors */
+    --color-surface-0: #1a1a1a;
+    --color-base: #eaecf0;
+    --color-subtle: #a2a9b1;
+    /* ... more colors */
+  }
+}
+```
+
+### Theme CSS Classes
+
+When a user selects a theme, a CSS class is applied to the `<html>` element:
+
+```html
+<!-- Auto theme (system preference) -->
+<html class="skin-theme-clientpref-os">
+
+<!-- Light theme -->
+<html class="skin-theme-clientpref-day">
+
+<!-- Dark theme -->
+<html class="skin-theme-clientpref-night">
+```
+
+These classes override the `prefers-color-scheme` media query:
+
+```css
+.skin-theme-clientpref-day {
+  color-scheme: light;
+  /* Force light theme colors */
+}
+
+.skin-theme-clientpref-night {
+  color-scheme: dark;
+  /* Force dark theme colors */
+}
+```
+
+### Storage and Persistence
+
+Theme preference is stored using MediaWiki's client preferences API:
+
+```javascript
+// Get current theme
+const theme = clientPrefs.get('skin-theme'); // 'os', 'day', or 'night'
+
+// Set theme
+clientPrefs.set('skin-theme', 'night');
+```
+
+Storage location:
+- **localStorage key:** `mwclientprefs-skin-theme`
+- **Value:** `os`, `day`, or `night`
+- **Scope:** Per-domain, per-browser
+
+### Theme Preview Colors
+
+The preferences UI shows visual previews of each theme option using computed CSS values:
+
+```javascript
+function getThemePreviewColors(value) {
+  const root = document.documentElement;
+  
+  // Temporarily apply theme class
+  root.classList.add(`skin-theme-clientpref-${value}`);
+  
+  // Read computed colors
+  const styles = getComputedStyle(root);
+  const surface = styles.getPropertyValue('--color-surface-0');
+  const text = styles.getPropertyValue('--color-base');
+  
+  // Restore original theme
+  root.classList.remove(`skin-theme-clientpref-${value}`);
+  
+  return { surface, text };
+}
+```
+
+## Color Design System
+
+### Surface Colors
+
+Layered surface colors create depth:
+
+```css
+--color-surface-0: /* Base background */
+--color-surface-1: /* Elevated elements */
+--color-surface-2: /* More elevated */
+--color-surface-3: /* Highest elevation */
+```
+
+### Text Colors
+
+Hierarchy through text colors:
+
+```css
+--color-base: /* Primary text */
+--color-subtle: /* Secondary text */
+--color-emphasized: /* Important text */
+--color-disabled: /* Disabled text */
+```
+
+### Semantic Colors
+
+Meaning through color:
+
+```css
+--color-progressive: /* Links, actions */
+--color-destructive: /* Dangerous actions */
+--color-success: /* Success states */
+--color-warning: /* Warning states */
+--color-error: /* Error states */
+```
+
+## Accessibility
+
+### Contrast Ratios
+
+The dark theme maintains WCAG AA contrast ratios:
+
+- **Normal text:** Minimum 4.5:1
+- **Large text:** Minimum 3:1
+- **UI components:** Minimum 3:1
+
+<Tip>
+Pure black mode may reduce contrast slightly. Standard dark mode is recommended for maximum accessibility.
+</Tip>
+
+### Color Scheme Meta Tag
+
+The theme sets the `color-scheme` CSS property:
+
+```css
+html {
+  color-scheme: light dark; /* Supports both */
+}
+
+.skin-theme-clientpref-day {
+  color-scheme: light; /* Force light */
+}
+
+.skin-theme-clientpref-night {
+  color-scheme: dark; /* Force dark */
+}
+```
+
+This tells the browser:
+- Which color scheme is active
+- How to render form controls
+- How to style scrollbars
+- Default colors for `<canvas>`, etc.
+
+### Respecting System Preferences
+
+The auto theme respects `prefers-color-scheme`:
+
+```javascript
+// Detect system theme
+const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+// Listen for changes
+window.matchMedia('(prefers-color-scheme: dark)')
+  .addEventListener('change', (e) => {
+    if (clientPrefs.get('skin-theme') === 'os') {
+      // Auto theme - update UI
+    }
+  });
+```
+
+## Best Practices
+
+### For Users
+
+<Tip>
+Use Auto (system theme) to have your wiki match your device's day/night cycle automatically.
+</Tip>
+
+<Tip>
+Enable Pure Black mode on OLED devices when using dark theme to save battery and reduce screen burn-in.
+</Tip>
+
+<Note>
+Image dimming is personal preference. Try it to see if it improves your reading experience in dark mode.
+</Note>
+
+### For Developers
+
+<Tip>
+Always use CSS custom properties for colors, never hard-coded hex values. This ensures your custom styles work in both themes.
+</Tip>
+
+```css
+/* Good */
+.my-element {
+  background-color: var(--color-surface-1);
+  color: var(--color-base);
+}
+
+/* Bad */
+.my-element {
+  background-color: #f8f9fa;
+  color: #202122;
+}
+```
+
+<Note>
+Test your custom CSS in both light and dark themes to ensure good contrast and readability.
+</Note>
+
+## Integration with Extensions
+
+Extensions can react to theme changes:
+
+```javascript
+// Listen for theme changes
+mw.hook('citizen.preferences.changed').add(function(featureName, value) {
+  if (featureName === 'skin-theme') {
+    console.log('Theme changed to:', value);
+    // Update your extension's UI
+  }
+});
+
+// Get current theme
+const currentTheme = mw.storage.get('mwclientprefs-skin-theme') || 'os';
+```
+
+## Color Tokens Reference
+
+Key color tokens used in dark theme:
+
+### Backgrounds
+```css
+--color-surface-0: #1a1a1a;  /* Main background */
+--color-surface-1: #202122;  /* Cards, panels */
+--color-surface-2: #27292a;  /* Elevated surfaces */
+```
+
+### Text
+```css
+--color-base: #eaecf0;     /* Primary text */
+--color-subtle: #a2a9b1;   /* Secondary text */
+--color-emphasized: #fff;  /* Headings */
+```
+
+### Interactive
+```css
+--color-progressive: #3366cc;     /* Links */
+--color-progressive-hover: #4b7fd0; /* Link hover */
+```
+
+### Borders
+```css
+--border-color-base: #27292a;   /* Standard borders */
+--border-color-subtle: #202122; /* Subtle borders */
+```
+
+## Troubleshooting
+
+### Theme Not Switching
+
+**Problem:** Selected theme doesn't apply  
+**Solutions:**
+1. Clear browser cache and localStorage
+2. Hard refresh (Ctrl+Shift+R)
+3. Check browser console for errors
+4. Verify JavaScript is enabled
+
+### Colors Look Wrong
+
+**Problem:** Some elements have incorrect colors  
+**Solutions:**
+1. Ensure custom CSS uses CSS variables
+2. Check for hard-coded color values
+3. Verify CSS specificity isn't overriding theme
+4. Test with extensions disabled
+
+### Pure Black Mode Not Working
+
+**Problem:** Pure black preference has no effect  
+**Solutions:**
+1. Verify dark theme is active
+2. Preference only appears in dark mode
+3. Check localStorage for preference value
+4. Hard refresh to apply CSS changes
+
+## Future Enhancements
+
+Potential future dark theme features:
+
+- **Custom accent colors** - User-selectable theme accents
+- **Scheduled themes** - Auto-switch at specific times
+- **Granular image control** - Per-image dimming settings
+- **Contrast presets** - High/low contrast variations
+- **Custom color schemes** - User-defined color palettes
+
+<Tip>
+The theme system is built on modern CSS features and can be extended with new preferences without changing the core architecture.
+</Tip>

@@ -1,0 +1,377 @@
+---
+title: Components
+description: CitizenComponent classes for modular UI rendering
+---
+
+## Overview
+
+Citizen uses a component-based architecture to organize UI elements. All components implement the `CitizenComponent` interface and are located in `includes/Components/`.
+
+**Namespace:** `MediaWiki\Skins\Citizen\Components`
+
+## CitizenComponent Interface
+
+The base interface all components must implement.
+
+```php
+interface CitizenComponent {
+    public function getTemplateData(): array;
+}
+```
+
+### getTemplateData
+
+Returns template data for Mustache rendering.
+
+```php
+public function getTemplateData(): array
+```
+
+<ResponseField name="return" type="array">
+  Associative array of template variables for Mustache rendering
+</ResponseField>
+
+## Core Components
+
+### CitizenComponentPageHeading
+
+Manages page heading display including titles and taglines.
+
+**Location:** `includes/Components/CitizenComponentPageHeading.php`
+
+#### Constructor
+
+```php
+public function __construct(
+    UserFactory $userFactory,
+    GenderCache $genderCache,
+    UserIdentityLookup $userIdentityLookup,
+    LanguageConverterFactory $languageConverterFactory,
+    Language $lang,
+    MessageLocalizer $localizer,
+    OutputPage $out,
+    Title $title,
+    string $titleData
+)
+```
+
+<ParamField path="userFactory" type="UserFactory" required>
+  Factory for creating User objects
+</ParamField>
+
+<ParamField path="genderCache" type="GenderCache" required>
+  Cache for user gender information
+</ParamField>
+
+<ParamField path="userIdentityLookup" type="UserIdentityLookup" required>
+  Service for looking up user identities
+</ParamField>
+
+<ParamField path="languageConverterFactory" type="LanguageConverterFactory" required>
+  Factory for language variant conversion
+</ParamField>
+
+<ParamField path="lang" type="Language" required>
+  Language object for localization
+</ParamField>
+
+<ParamField path="localizer" type="MessageLocalizer" required>
+  Message localization service
+</ParamField>
+
+<ParamField path="out" type="OutputPage" required>
+  OutputPage object for the current page
+</ParamField>
+
+<ParamField path="title" type="Title" required>
+  Title object for the current page
+</ParamField>
+
+<ParamField path="titleData" type="string" required>
+  Raw title HTML from parent template
+</ParamField>
+
+#### Template Data
+
+```php
+public function getTemplateData(): array
+```
+
+<ResponseField name="html-tagline" type="string">
+  Page tagline HTML (namespace tagline, user info, or site tagline)
+</ResponseField>
+
+<ResponseField name="html-title-heading" type="string">
+  Modified page heading HTML with styled parentheses
+</ResponseField>
+
+**Usage Example:**
+
+```php
+$pageHeading = new CitizenComponentPageHeading(
+    $userFactory,
+    $genderCache,
+    $userIdentityLookup,
+    $languageConverterFactory,
+    $lang,
+    $localizer,
+    $out,
+    $title,
+    $titleData
+);
+$data = $pageHeading->getTemplateData();
+// Returns: ['html-tagline' => '...', 'html-title-heading' => '...']
+```
+
+### CitizenComponentPageTools
+
+Manages the page tools menu including article tools, languages, and share functionality.
+
+**Location:** `includes/Components/CitizenComponentPageTools.php`
+
+#### Constants
+
+```php
+public const TOOLBOX_ID = 'p-tb';
+```
+
+#### Constructor
+
+```php
+public function __construct(
+    Config $config,
+    MessageLocalizer $localizer,
+    Title $title,
+    User $user,
+    PermissionManager $permissionManager,
+    int $numLanguages,
+    array $pageToolsMenu,
+    array $languagesData,
+    array $variantsData
+)
+```
+
+<ParamField path="config" type="Config" required>
+  Configuration object
+</ParamField>
+
+<ParamField path="localizer" type="MessageLocalizer" required>
+  Message localization service
+</ParamField>
+
+<ParamField path="title" type="Title" required>
+  Current page title
+</ParamField>
+
+<ParamField path="user" type="User" required>
+  Current user
+</ParamField>
+
+<ParamField path="permissionManager" type="PermissionManager" required>
+  Permission manager for access checks
+</ParamField>
+
+<ParamField path="numLanguages" type="int" required>
+  Number of available languages
+</ParamField>
+
+<ParamField path="pageToolsMenu" type="array" required>
+  Page tools menu data from sidebar
+</ParamField>
+
+<ParamField path="languagesData" type="array" required>
+  Language links data
+</ParamField>
+
+<ParamField path="variantsData" type="array" required>
+  Language variant data
+</ParamField>
+
+#### Template Data
+
+```php
+public function getTemplateData(): array
+```
+
+<ResponseField name="data-article-tools" type="array">
+  Article tools menu data
+</ResponseField>
+
+<ResponseField name="is-visible" type="bool">
+  Whether page tools should be shown (based on `CitizenShowPageTools` config)
+</ResponseField>
+
+<ResponseField name="has-overflow" type="bool">
+  Whether there are any article tools to show
+</ResponseField>
+
+<ResponseField name="has-languages" type="bool">
+  Whether language links or variants are available
+</ResponseField>
+
+<ResponseField name="is-uls-ready" type="bool">
+  Whether Universal Language Selector is ready (currently always false)
+</ResponseField>
+
+<ResponseField name="int-language-count" type="int">
+  Number of available languages
+</ResponseField>
+
+<ResponseField name="is-sharable" type="bool">
+  Whether the page can be shared (exists and is content page)
+</ResponseField>
+
+<ResponseField name="msg-citizen-share" type="string">
+  Localized share button text
+</ResponseField>
+
+**Visibility Configuration:**
+
+The `CitizenShowPageTools` config accepts:
+- `true`: Always visible
+- `false`: Never visible
+- `'login'`: Only visible if logged in
+- `'permission-*'`: Only visible if user has permission (e.g., `'permission-edit'`)
+
+### CitizenComponentSearchBox
+
+Provides enhanced search box with keyboard shortcuts and powered-by message.
+
+**Location:** `includes/Components/CitizenComponentSearchBox.php`
+
+#### Constructor
+
+```php
+public function __construct(
+    MessageLocalizer $localizer,
+    ExtensionRegistry $extensionRegistry,
+    array $searchBoxData
+)
+```
+
+<ParamField path="localizer" type="MessageLocalizer" required>
+  Message localization service
+</ParamField>
+
+<ParamField path="extensionRegistry" type="ExtensionRegistry" required>
+  Registry for checking loaded extensions
+</ParamField>
+
+<ParamField path="searchBoxData" type="array" required>
+  Base search box data from parent template
+</ParamField>
+
+#### Template Data
+
+```php
+public function getTemplateData(): array
+```
+
+<ResponseField name="array-keyboard-hint" type="array">
+  Array of keyboard hint data (↑↓ for select, / for open, Esc for exit)
+</ResponseField>
+
+<ResponseField name="msg-citizen-search-footer" type="string">
+  Powered-by message (CirrusSearch or MediaWiki)
+</ResponseField>
+
+<ResponseField name="msg-citizen-search-toggle-shortcut" type="string">
+  Search toggle shortcut display text
+</ResponseField>
+
+<ResponseField name="html-random-href" type="string">
+  URL to Special:Randompage
+</ResponseField>
+
+**Usage Example:**
+
+```php
+$searchBox = new CitizenComponentSearchBox(
+    $localizer,
+    $extensionRegistry,
+    $parentData['data-search-box']
+);
+$data = $searchBox->getTemplateData();
+```
+
+### CitizenComponentMainMenu
+
+Organizes sidebar navigation into main menu structure.
+
+**Location:** `includes/Components/CitizenComponentMainMenu.php`
+
+#### Constructor
+
+```php
+public function __construct(
+    array $sidebarData
+)
+```
+
+<ParamField path="sidebarData" type="array" required>
+  Sidebar data from parent template
+</ParamField>
+
+#### Template Data
+
+```php
+public function getTemplateData(): array
+```
+
+<ResponseField name="data-portlets-first" type="array">
+  First portlet menu data (processed through CitizenComponentMenu)
+</ResponseField>
+
+<ResponseField name="array-portlets-rest" type="array">
+  Remaining portlet menus (each processed through CitizenComponentMenu)
+</ResponseField>
+
+## Other Components
+
+Citizen includes additional components for specific UI elements:
+
+- **CitizenComponentBodyContent** - Wraps main content, handles collapsible sections
+- **CitizenComponentButton** - Renders button elements
+- **CitizenComponentFooter** - Site footer with links
+- **CitizenComponentKeyboardHint** - Keyboard shortcut hints
+- **CitizenComponentLink** - Link elements
+- **CitizenComponentMenu** - Menu container
+- **CitizenComponentMenuListItem** - Individual menu items
+- **CitizenComponentPageFooter** - Page metadata footer
+- **CitizenComponentPageSidebar** - Sidebar content
+- **CitizenComponentSiteStats** - Site statistics display
+- **CitizenComponentStickyHeader** - Sticky header behavior
+- **CitizenComponentTableOfContents** - Table of contents
+- **CitizenComponentUserInfo** - User information display
+
+## Creating Custom Components
+
+To create a new component:
+
+1. Implement the `CitizenComponent` interface
+2. Add constructor with required dependencies
+3. Implement `getTemplateData()` method
+4. Return array of template variables
+
+```php
+namespace MediaWiki\Skins\Citizen\Components;
+
+class MyCustomComponent implements CitizenComponent {
+    public function __construct(
+        private readonly MessageLocalizer $localizer,
+        private readonly array $data
+    ) {}
+
+    public function getTemplateData(): array {
+        return [
+            'custom-field' => $this->data['value'],
+            'msg-custom' => $this->localizer->msg( 'custom-message' )->text()
+        ];
+    }
+}
+```
+
+## Related
+
+- [SkinCitizen](/api/skin-citizen) - Main skin class
+- [Hooks](/api/hooks) - Hook handlers that modify component data

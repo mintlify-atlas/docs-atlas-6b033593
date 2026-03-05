@@ -1,0 +1,408 @@
+---
+title: Testing
+description: Learn how to test your changes to the Citizen MediaWiki skin
+---
+
+## Overview
+
+Citizen uses a comprehensive testing strategy with multiple linters and test suites:
+
+- **JavaScript/Vue**: ESLint + Vitest
+- **PHP**: PHPCS, Phan, PHPUnit
+- **Styles**: Stylelint
+- **i18n**: Banana checker
+- **Markdown**: markdownlint
+
+Always run the relevant checks before committing. The project uses a "preflight" system to run all necessary checks.
+
+## Quick Reference
+
+Run only what's relevant to the files you changed:
+
+| Files Changed | Command |
+|---------------|----------|
+| `*.php` | `composer preflight` |
+| `*.js`, `*.vue` | `npm run lint:js` then `npm test` |
+| `*.less`, `*.css`, `*.vue` | `npm run lint:styles` |
+| `i18n/` | `npm run lint:i18n` |
+| `*.md` | `npm run lint:md` |
+
+## Node.js Testing
+
+### Running All Checks
+
+Run all Node-based linters and tests in one command:
+
+```bash
+npm run preflight
+```
+
+This executes:
+- JavaScript linting (ESLint)
+- Style linting (Stylelint)
+- i18n validation (Banana checker)
+- Markdown linting
+- JavaScript unit tests (Vitest)
+
+### Individual Checks
+
+#### JavaScript Linting
+
+```bash
+# Run ESLint
+npm run lint:js
+
+# Auto-fix issues
+npm run lint:fix:js
+```
+
+ESLint checks:
+- Code quality issues
+- CommonJS module syntax
+- Browser compatibility (via eslint-plugin-compat)
+- MediaWiki coding standards
+
+#### Style Linting
+
+```bash
+# Run Stylelint on LESS, CSS, and Vue files
+npm run lint:styles
+
+# Auto-fix style issues
+npm run lint:fix:styles
+```
+
+Stylelint validates:
+- LESS/CSS syntax
+- Property ordering (via stylelint-config-recess-order)
+- MediaWiki style conventions
+- Vue component styles
+
+#### i18n Validation
+
+```bash
+npm run lint:i18n
+```
+
+Validates translation files:
+- JSON syntax in `i18n/*.json`
+- Message key consistency
+- Required documentation in `qqq.json`
+
+#### Markdown Linting
+
+```bash
+# Check markdown files
+npm run lint:md
+
+# Auto-fix markdown issues
+npm run lint:fix:md
+```
+
+### JavaScript Unit Tests
+
+Citizen uses Vitest for JavaScript testing:
+
+```bash
+# Run tests once
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+```
+
+Test files are located in `tests/vitest/`.
+
+#### Writing Vitest Tests
+
+Follow the Arrange-Act-Assert pattern with blank lines separating each phase:
+
+```javascript
+import { describe, it, expect, beforeEach } from 'vitest';
+import { functionToTest } from '../../resources/module.js';
+
+describe( 'functionToTest', () => {
+  beforeEach( () => {
+    // Set up DOM fixtures with innerHTML (not createElement chains)
+    document.body.innerHTML = `
+      <div class="test-container">
+        <button id="test-button">Click me</button>
+      </div>
+    `;
+  } );
+
+  it( 'should do something when condition is met', () => {
+    // Arrange
+    const button = document.getElementById( 'test-button' );
+    const expectedValue = 'clicked';
+
+    // Act
+    functionToTest( button );
+
+    // Assert
+    expect( button.textContent ).toBe( expectedValue );
+  } );
+} );
+```
+
+<Note>
+Use `document.body.innerHTML` with HTML strings for DOM fixtures rather than imperative `createElement` chains. This is more readable and mirrors actual markup.
+</Note>
+
+## PHP Testing
+
+### Running All Checks
+
+Run all PHP linters, static analysis, and tests:
+
+```bash
+composer preflight
+```
+
+This must be run from within a MediaWiki installation. In Docker:
+
+```bash
+docker compose exec mediawiki bash -c "cd /var/www/html/w/skins/Citizen && composer preflight"
+```
+
+The preflight command runs:
+- Parallel lint (syntax check)
+- PHPCS (code style)
+- minus-x (executable bit check)
+- Phan (static analysis)
+- PHPUnit (unit tests)
+
+### Individual Checks
+
+#### Code Style (PHPCS)
+
+```bash
+# Check code style
+composer phpcs
+
+# Auto-fix style issues
+composer fix
+```
+
+<Warning>
+PHPCS warnings **must** be fixed, not just errors. The command exits 0 even with warnings, so don't rely on exit code alone. Always read the full output.
+</Warning>
+
+The `fix` command runs:
+- `minus-x fix .` (fix executable bits)
+- `phpcbf` (auto-fix code style)
+
+#### Static Analysis (Phan)
+
+```bash
+composer phan
+```
+
+Phan performs static analysis to catch:
+- Type errors
+- Undefined variables
+- Deprecated API usage
+- Security issues
+
+#### Unit Tests (PHPUnit)
+
+```bash
+composer phpunit
+```
+
+This runs PHPUnit tests from `tests/phpunit/`.
+
+#### Syntax Check
+
+```bash
+composer test
+```
+
+Runs parallel-lint, PHPCS, and executable checks (but not Phan or PHPUnit).
+
+### Writing PHPUnit Tests
+
+Test files go in `tests/phpunit/` mirroring the source structure.
+
+```php
+<?php
+
+namespace MediaWiki\Skins\Citizen\Tests\Components;
+
+use MediaWiki\Skins\Citizen\Components\CitizenComponentButton;
+
+/**
+ * @covers \MediaWiki\Skins\Citizen\Components\CitizenComponentButton
+ */
+class CitizenComponentButtonTest extends \MediaWikiUnitTestCase {
+
+    public function testGetTemplateDataReturnsExpectedStructure() {
+        // Arrange
+        $label = 'Test Button';
+        $weight = 'primary';
+        $button = new CitizenComponentButton(
+            label: $label,
+            weight: $weight
+        );
+
+        // Act
+        $data = $button->getTemplateData();
+
+        // Assert
+        $this->assertIsArray( $data );
+        $this->assertSame( $label, $data['label'] );
+        $this->assertStringContainsString( 'cdx-button', $data['class'] );
+        $this->assertStringContainsString( 'primary', $data['class'] );
+    }
+}
+```
+
+#### PHPUnit Conventions
+
+- Test class names match the class under test with `Test` suffix (`FooTest` for `Foo`)
+- Use `@covers` annotation with fully qualified name
+- Follow Arrange-Act-Assert with blank lines
+- Use native PHP types
+- Use named parameters when constructing objects
+
+## Browser Testing
+
+When testing features that require browser interaction:
+
+1. **Use automation tools** when available (Chrome DevTools MCP, Playwright MCP)
+2. **Test against the dev environment URL** before asking for manual testing
+3. **Always check the browser console** for warnings and errors, not just visual correctness
+
+### Manual Testing Checklist
+
+When manually testing in a browser:
+
+- [ ] Feature works as expected visually
+- [ ] No JavaScript errors in console
+- [ ] No console warnings
+- [ ] Works in responsive layouts (mobile, tablet, desktop)
+- [ ] Keyboard navigation functional
+- [ ] Screen reader accessible (if applicable)
+- [ ] Dark mode appearance correct
+- [ ] No LESS compilation errors
+
+## Pre-commit Workflow
+
+Citizen uses Lefthook for Git hooks:
+
+```bash
+npm run prepare
+```
+
+The pre-commit hook:
+- Validates commit message format (Conventional Commits)
+- Auto-adds emojis based on commit type
+- Runs basic linting checks
+
+### Commit Message Format
+
+Use [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat: add new search component
+fix: resolve header overlap issue
+refactor: simplify button component logic
+chore: update dependencies
+ci: update GitHub Actions workflow
+test: add coverage for menu component
+docs: update contributing guide
+```
+
+<Warning>
+Do **not** include emojis manually. The pre-commit hook adds them automatically.
+</Warning>
+
+## Running Full Test Suite
+
+Before submitting a pull request, run both preflight commands:
+
+```bash
+# Node.js checks and tests
+npm run preflight
+
+# PHP checks and tests (in Docker)
+docker compose exec mediawiki bash -c "cd /var/www/html/w/skins/Citizen && composer preflight"
+```
+
+## Continuous Integration
+
+GitHub Actions automatically runs tests on:
+- Pull requests
+- Pushes to main branch
+
+The CI pipeline runs:
+- All linters (JS, CSS, PHP, i18n, markdown)
+- JavaScript tests (Vitest)
+- PHP static analysis (Phan)
+- PHP unit tests (PHPUnit)
+
+Ensure all checks pass before merging.
+
+## Coverage
+
+Vitest can generate coverage reports:
+
+```bash
+npm test -- --coverage
+```
+
+Coverage reports show which lines of code are tested.
+
+## Troubleshooting
+
+### Docker Command Fails
+
+If composer commands fail in Docker:
+
+```bash
+# Ensure container is running
+docker compose ps
+
+# Check you're in the correct directory inside the container
+docker compose exec mediawiki bash
+cd /var/www/html/w/skins/Citizen
+composer preflight
+```
+
+### PHPCS Warnings Not Failing
+
+PHPCS exits 0 even with warnings. Always read the full output:
+
+```bash
+composer phpcs 2>&1 | grep -E "WARNING|ERROR"
+```
+
+### Cache Issues
+
+ESLint and other tools use caching. If you see unexpected results:
+
+```bash
+# Clear ESLint cache
+rm -rf .eslintcache
+
+# Clear all node_modules and reinstall
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### Tests Pass Locally But Fail in CI
+
+Ensure you've committed all files:
+
+```bash
+git status
+git add .
+```
+
+CI runs on committed code, not local changes.
+
+## Next Steps
+
+- Review [Coding Conventions](/development/contributing#coding-conventions)
+- Learn about [Components](/development/components)
+- Understand the [Architecture](/development/architecture)

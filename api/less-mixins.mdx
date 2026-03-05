@@ -1,0 +1,637 @@
+---
+title: LESS Mixins
+description: Reusable LESS mixins for common styling patterns in the Citizen skin
+---
+
+Citizen provides a collection of LESS mixins to simplify common styling patterns and ensure consistency across components. Import them from `mixins.less`.
+
+## Import
+
+```less
+@import 'mixins.less';
+```
+
+This automatically imports `variables.less`, giving you access to both mixins and LESS variables.
+
+## Surface Effects
+
+### `.mixin-citizen-opaque-background(@surface)`
+
+Creates an opaque background with the specified surface level and progressive color tinting.
+
+**Parameters:**
+- `@surface` - Surface level (1-4), default: 1
+
+**Example:**
+
+```less
+.my-card {
+  .mixin-citizen-opaque-background(2);
+}
+```
+
+**Output:**
+
+```css
+.my-card {
+  background: oklch(
+    var(--color-surface-2-oklch__l)
+    var(--color-surface-2-oklch__c)
+    var(--color-progressive-oklch__h)
+    / var(--opacity-glass)
+  );
+}
+
+/* With HSL fallback for older browsers */
+@supports not (color: oklch(100% 0 0)) {
+  .my-card {
+    background: hsl(
+      var(--color-progressive-hsl__h),
+      var(--color-surface-2-hsl__s),
+      var(--color-surface-2-hsl__l)
+      / var(--opacity-glass)
+    );
+  }
+}
+```
+
+### `.mixin-citizen-frosted-glass(@surface)`
+
+Creates a frosted glass effect with backdrop blur and progressive color tinting.
+
+**Parameters:**
+- `@surface` - Surface level (1-4), default: 1
+
+**Example:**
+
+```less
+.modal-backdrop {
+  .mixin-citizen-frosted-glass(1);
+}
+```
+
+**Output:**
+
+```css
+.modal-backdrop {
+  background: oklch(
+    var(--color-surface-1-oklch__l)
+    var(--color-surface-1-oklch__c)
+    var(--color-progressive-oklch__h)
+    / var(--opacity-glass)
+  );
+  -webkit-backdrop-filter: var(--backdrop-filter-frosted-glass);
+  backdrop-filter: var(--backdrop-filter-frosted-glass);
+}
+```
+
+## Header Components
+
+### `.mixin-citizen-header-card(@position)`
+
+Positions header card popups responsively based on screen size and position.
+
+**Parameters:**
+- `@position` - Either `start` or `end`
+
+**Behavior:**
+- **Mobile:** Appears at bottom (above header)
+- **Tablet:** Positioned at start/end based on parameter
+- **Desktop:** Appears to the side (left for start, right for end)
+
+**Example:**
+
+```less
+.user-menu-dropdown {
+  .mixin-citizen-header-card(end);
+}
+```
+
+**Output:**
+
+```css
+.user-menu-dropdown {
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  max-height: var(--header-card-maxheight);
+}
+
+@media (min-width: 720px) {
+  .user-menu-dropdown {
+    left: unset; /* position at end */
+  }
+}
+
+@media (min-width: 1000px) {
+  .user-menu-dropdown {
+    right: unset;
+    left: 100%;
+    bottom: 0;
+  }
+}
+```
+
+## Sticky Elements
+
+### `.mixin-citizen-sticky-header-element()`
+
+Applies positioning and transition for sticky header elements.
+
+**Example:**
+
+```less
+.sticky-nav {
+  .mixin-citizen-sticky-header-element();
+}
+```
+
+**Output:**
+
+```css
+.sticky-nav {
+  top: var(--header-offset-block-start) !important;
+  transition-timing-function: var(--transition-timing-function-ease);
+  transition-duration: var(--transition-duration-medium);
+  transition-property: top;
+}
+```
+
+### `.mixin-citizen-sticky-header-background()`
+
+Creates a frosted glass background for sticky headers using a `::before` pseudo-element.
+
+**Example:**
+
+```less
+.table-header {
+  .mixin-citizen-sticky-header-background();
+}
+```
+
+**Output:**
+
+```css
+.table-header::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: -1;
+  display: block;
+  height: 100%;
+  content: '';
+  background-color: var(--color-surface-0);
+  filter: opacity(0.9);
+  -webkit-backdrop-filter: var(--backdrop-filter-frosted-glass);
+  backdrop-filter: var(--backdrop-filter-frosted-glass);
+}
+```
+
+### `.mixin-citizen-sticky-header(@bottomBorder, @zIndex)`
+
+Combines all sticky header features into one mixin.
+
+**Parameters:**
+- `@bottomBorder` - Add bottom border (true/false), default: true
+- `@zIndex` - Apply sticky z-index (true/false), default: true
+
+**Example:**
+
+```less
+.page-header {
+  position: sticky;
+  .mixin-citizen-sticky-header(true, true);
+}
+
+.simple-sticky {
+  position: sticky;
+  .mixin-citizen-sticky-header(false, false);
+}
+```
+
+**Output:**
+
+```css
+.page-header {
+  position: -webkit-sticky;
+  position: sticky;
+  top: var(--header-offset-block-start) !important;
+  z-index: 10; /* sticky z-index */
+  box-shadow: 0 1px 0 0 var(--border-color-base);
+  /* Plus background and transition properties */
+}
+```
+
+## Accessibility
+
+### `.mixin-citizen-screen-reader-only()`
+
+Hides content visually while keeping it accessible to screen readers.
+
+**Example:**
+
+```less
+.visually-hidden-label {
+  .mixin-citizen-screen-reader-only();
+}
+```
+
+**Output:**
+
+```css
+.visually-hidden-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+```
+
+## Buttons
+
+### `.mixin-citizen-button-progressive()`
+
+Applies progressive (primary) button styling.
+
+**Example:**
+
+```less
+.action-button {
+  .mixin-citizen-button-progressive();
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--border-radius-base);
+}
+```
+
+**Output:**
+
+```css
+.action-button {
+  color: var(--color-inverted-primary) !important;
+  background-color: var(--background-color-progressive);
+}
+
+.action-button:hover {
+  background-color: var(--background-color-progressive--hover);
+}
+
+.action-button:active {
+  background-color: var(--background-color-progressive--active);
+}
+```
+
+### `.mixin-citizen-button-destructive()`
+
+Applies destructive (danger) button styling.
+
+**Example:**
+
+```less
+.delete-button {
+  .mixin-citizen-button-destructive();
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--border-radius-base);
+}
+```
+
+**Output:**
+
+```css
+.delete-button {
+  color: var(--color-inverted-fixed) !important;
+  background-color: var(--background-color-destructive);
+}
+
+.delete-button:hover {
+  background-color: var(--background-color-destructive--hover);
+}
+
+.delete-button:active {
+  background-color: var(--background-color-destructive--active);
+}
+```
+
+## Typography
+
+### `.mixin-citizen-font-styles(@type)`
+
+Applies Codex 2.0 typography styles.
+
+**Parameters:**
+- `@type` - Typography type: `heading-1`, `heading-2`, `heading-3`, `heading-4`, `body`, `small`, `overline`
+
+**Example:**
+
+```less
+.page-title {
+  .mixin-citizen-font-styles(heading-1);
+}
+
+.section-title {
+  .mixin-citizen-font-styles(heading-2);
+}
+
+.body-text {
+  .mixin-citizen-font-styles(body);
+}
+
+.small-print {
+  .mixin-citizen-font-styles(small);
+}
+
+.category-label {
+  .mixin-citizen-font-styles(overline);
+}
+```
+
+**Output:**
+
+```css
+/* heading-1 */
+.page-title {
+  font-size: var(--font-size-xxx-large); /* 1.75rem / 28px */
+  font-weight: var(--font-weight-semi-bold); /* 600 */
+  line-height: var(--line-height-xxx-large); /* 2.375rem / 38px */
+}
+
+/* heading-2 */
+.section-title {
+  font-size: var(--font-size-xx-large); /* 1.5rem / 24px */
+  font-weight: var(--font-weight-semi-bold);
+  line-height: var(--line-height-xx-large); /* 2.125rem / 34px */
+}
+
+/* body */
+.body-text {
+  font-size: var(--font-size-medium); /* 1rem / 16px */
+  line-height: var(--line-height-medium); /* 1.625rem / 26px */
+}
+
+/* small */
+.small-print {
+  font-size: var(--font-size-small); /* 0.875rem / 14px */
+  line-height: var(--line-height-small); /* 1.375rem / 22px */
+}
+
+/* overline */
+.category-label {
+  font-family: var(--font-family-overline);
+  font-size: var(--font-size-overline);
+  font-weight: var(--font-weight-overline);
+  line-height: var(--line-height-overline);
+  text-transform: var(--text-transform-overline);
+  letter-spacing: var(--letter-spacing-overline);
+}
+```
+
+## Forms
+
+### `.mixin-citizen-cdx-input()`
+
+Retrofits input elements with Codex styling.
+
+**Example:**
+
+```less
+input[type="text"],
+input[type="email"],
+input[type="search"] {
+  .mixin-citizen-cdx-input();
+}
+```
+
+**Output:**
+
+```css
+input[type="text"] {
+  min-height: 32px; /* @min-size-interactive-pointer */
+  padding: 4px 8px; /* @spacing-25 @spacing-50 */
+  font-size: 1rem; /* @font-size-medium */
+  line-height: 1.375rem; /* @line-height-small */
+  border-radius: 4px; /* @border-radius-base */
+  box-shadow: inset 0 0 0 1px transparent;
+  transition-duration: 250ms;
+  transition-property: background-color, color, border-color, box-shadow;
+}
+
+input[type="text"]:focus {
+  outline: 2px solid var(--color-progressive);
+  border-color: var(--border-color-progressive--focus);
+  box-shadow: inset 0 0 0 1px var(--box-shadow-color-progressive--focus);
+}
+```
+
+## Visual Effects
+
+### `.mixin-citizen-mask-gradient(@direction, @color1, @color2, @color3, @color4)`
+
+Creates a gradient mask effect (useful for fade-out effects).
+
+**Parameters:**
+- `@direction` - Gradient direction (e.g., `to right`, `to bottom`)
+- `@color1`, `@color2` - Required gradient stops
+- `@color3`, `@color4` - Optional additional gradient stops
+
+**Example:**
+
+```less
+.fade-out-right {
+  .mixin-citizen-mask-gradient(
+    to right,
+    rgba(0, 0, 0, 1),
+    rgba(0, 0, 0, 0)
+  );
+}
+
+.complex-fade {
+  .mixin-citizen-mask-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0),
+    rgba(0, 0, 0, 1),
+    rgba(0, 0, 0, 1),
+    rgba(0, 0, 0, 0)
+  );
+}
+```
+
+**Output:**
+
+```css
+.fade-out-right {
+  -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+  mask-image: linear-gradient(to right, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+}
+
+.complex-fade {
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 1), rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 1), rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+}
+```
+
+### `.recolor(@color)`
+
+Transforms black SVG/images to a specified color using CSS filters.
+
+**Parameters:**
+- `@color` - Target color (LESS color value)
+
+**Example:**
+
+```less
+.icon-red {
+  .recolor(#e53935);
+}
+
+.icon-progressive {
+  .recolor(var(--color-progressive));
+}
+```
+
+**Output:**
+
+```css
+.icon-red {
+  /* Grayscale fallback */
+  filter: saturate(0%) brightness(0%) invert(45%) opacity(1);
+  
+  /* SVG color matrix filter */
+  filter: url(';data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><filter id="recolor" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0.898 0 0 0 0 0.224 0 0 0 0 0.208 0 0 0 1 0"/></filter></svg> #recolor');
+}
+```
+
+## Theme Utilities
+
+### `.mixin-citizen-css-theme-clientpref-all(@prop, @value)`
+
+Applies a CSS property across all theme modes (overrides MediaWiki dark mode styles).
+
+**Parameters:**
+- `@prop` - CSS property name
+- `@value` - CSS value
+
+**Example:**
+
+```less
+.always-white-bg {
+  .mixin-citizen-css-theme-clientpref-all(background-color, #fff);
+}
+```
+
+**Output:**
+
+```css
+.always-white-bg {
+  background-color: #fff;
+}
+
+@media screen {
+  html.skin-theme-clientpref-night .always-white-bg {
+    background-color: #fff;
+  }
+}
+
+@media screen and (prefers-color-scheme: dark) {
+  html.skin-theme-clientpref-os .always-white-bg {
+    background-color: #fff;
+  }
+}
+```
+
+## Codex Overrides
+
+### `.citizen-cdx-mixin-link-base-overrides()`
+
+Overrides Codex link styles to use Citizen link colors.
+
+**Example:**
+
+```less
+.cdx-button--fake-button--enabled.cdx-button--weight-quiet.cdx-button--action-default {
+  .citizen-cdx-mixin-link-base-overrides();
+}
+```
+
+**Output:**
+
+```css
+.cdx-button {
+  color: var(--color-link);
+}
+
+.cdx-button:hover {
+  color: var(--color-link--hover);
+}
+
+.cdx-button:active {
+  color: var(--color-link--active);
+}
+
+.cdx-button:visited:hover {
+  color: var(--color-visited--hover);
+}
+
+.cdx-button:visited:active {
+  color: var(--color-visited--active);
+}
+```
+
+## Complete Component Example
+
+Here's how multiple mixins work together in a real component:
+
+```less
+@import 'mixins.less';
+
+.custom-dropdown {
+  position: relative;
+  
+  &__button {
+    .mixin-citizen-button-progressive();
+    .mixin-citizen-font-styles(body);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--border-radius-base);
+  }
+  
+  &__menu {
+    .mixin-citizen-frosted-glass(1);
+    position: absolute;
+    border: var(--border-base);
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-large);
+    padding: var(--space-xs);
+    
+    @media (min-width: @min-width-breakpoint-desktop) {
+      .mixin-citizen-header-card(end);
+    }
+  }
+  
+  &__item {
+    .mixin-citizen-font-styles(small);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--border-radius-base);
+    background-color: var(--color-surface-1);
+    
+    &:hover {
+      background-color: var(--color-surface-1--hover);
+    }
+  }
+  
+  &__label {
+    .mixin-citizen-screen-reader-only();
+  }
+}
+
+.sticky-toolbar {
+  .mixin-citizen-sticky-header(true, true);
+  padding: var(--space-md);
+}
+```
+
+## Related Resources
+
+- [CSS Variables](/api/css-variables) - Available CSS custom properties
+- [Design Tokens](/api/tokens) - Token system overview
+- [MediaWiki LESS Mixins](https://github.com/wikimedia/mediawiki/blob/master/resources/src/mediawiki.less/mediawiki.mixins.less) - Upstream mixins

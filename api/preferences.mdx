@@ -1,0 +1,470 @@
+---
+title: Preferences Module
+description: User preferences panel for theme, appearance, and behavior settings
+---
+
+The preferences module provides a client-side preferences interface built with Vue 3 and Codex components.
+
+## Module Configuration
+
+**Module Name:** `skins.citizen.preferences`
+
+**Dependencies:**
+- `skins.citizen.preferences.codex`
+- `mediawiki.storage`
+- `mediawiki.util`
+- `vue`
+
+**Codex Components (via skins.citizen.preferences.codex):**
+- `CdxField`
+- `CdxIcon`
+- `CdxRadio`
+- `CdxSelect`
+- `CdxToggleSwitch`
+
+**Entry Point:** `resources/skins.citizen.preferences/init.js`
+
+## Initialization
+
+The preferences module lazy-loads when the preferences button is first clicked:
+
+```javascript
+// From skins.citizen.scripts/skin.js
+function initPreferences({ document, mw }) {
+  document.getElementById('citizen-preferences-details')
+    .addEventListener('toggle', () => {
+      mw.loader.load('skins.citizen.preferences');
+    }, { once: true });
+}
+```
+
+### Automatic Initialization
+
+The module auto-initializes on load:
+
+```javascript
+const Vue = require('vue');
+const { reactive } = Vue;
+const App = require('./App.vue');
+const getDefaultConfig = require('./defaultConfig.js');
+const serverConfig = require('./config.json');
+const overrideData = require('./overrides.json');
+
+function initApp() {
+  const mountPoint = document.getElementById('citizen-preferences-content');
+  if (!mountPoint) return;
+
+  const defaults = getDefaultConfig();
+  const config = reactive(
+    normalizeConfig(mergeConfigs(defaults, overrideData.overrides))
+  );
+
+  const app = Vue.createMwApp(App);
+  app.provide('preferencesConfig', config);
+  app.provide('themeDefault', themeDefault);
+  app.mount(mountPoint);
+
+  mw.hook('citizen.preferences.register').fire(register);
+}
+
+initApp();
+```
+
+## Architecture
+
+### Configuration System
+
+Preferences use a structured configuration format:
+
+```typescript
+interface PreferencesConfig {
+  sections: Record<string, SectionConfig>;
+  preferences: Record<string, PreferenceConfig>;
+}
+
+interface SectionConfig {
+  label: string | MessageKey;
+  order?: number;
+}
+
+interface PreferenceConfig {
+  section: string;            // Section key
+  label: string | MessageKey;
+  description?: string | MessageKey;
+  type: 'radio' | 'select' | 'switch';
+  options: Option[];
+  visibilityCondition?: 'always' | 'dark-theme';
+  columns?: number;           // For radio groups
+}
+
+interface Option {
+  value: string;
+  label: string | MessageKey;
+}
+
+type MessageKey = { msg: string };
+```
+
+### Default Configuration
+
+Built-in preferences from `defaultConfig.js`:
+
+**Sections:**
+- `appearance` - Visual appearance settings
+- `behavior` - Interaction behavior settings
+
+**Preferences:**
+
+1. **skin-theme** - Theme selection
+   - Options: `os` (Auto), `day` (Light), `night` (Dark)
+   - Type: radio
+   - Section: appearance
+
+2. **citizen-feature-custom-width** - Page width
+   - Options: `standard`, `wide`, `full`
+   - Type: radio
+   - Section: appearance
+
+3. **citizen-feature-custom-font-size** - Font size
+   - Options: `small`, `standard`, `large`, `xlarge`
+   - Type: radio
+   - Section: appearance
+
+4. **citizen-feature-pure-black** - Pure black theme
+   - Type: switch
+   - Visibility: `dark-theme`
+   - Section: appearance
+
+5. **citizen-feature-image-dimming** - Image dimming in dark mode
+   - Type: switch
+   - Visibility: `dark-theme`
+   - Section: appearance
+
+6. **citizen-feature-autohide-navigation** - Auto-hide navigation
+   - Type: switch
+   - Section: behavior
+
+7. **citizen-feature-performance-mode** - Performance mode
+   - Type: switch
+   - Section: behavior
+
+## Configuration Registry
+
+From `configRegistry.js`:
+
+### mergeConfigs(base, override)
+
+Deep merges two configuration objects.
+
+**Parameters:**
+- `base` (PreferencesConfig) - Base configuration
+- `override` (PreferencesConfig) - Override configuration
+
+**Returns:** (PreferencesConfig) Merged configuration
+
+```javascript
+const { mergeConfigs } = require('./configRegistry.js');
+
+const merged = mergeConfigs(defaultConfig, {
+  sections: {
+    custom: { label: 'Custom Section' }
+  },
+  preferences: {
+    'my-pref': {
+      section: 'custom',
+      label: 'My Preference',
+      type: 'switch',
+      options: [
+        { value: '0', label: 'Off' },
+        { value: '1', label: 'On' }
+      ]
+    }
+  }
+});
+```
+
+### normalizeConfig(config)
+
+Normalizes and validates configuration.
+
+**Parameters:**
+- `config` (PreferencesConfig) - Raw configuration
+
+**Returns:** (NormalizedPreferencesConfig)
+
+### resolveLabel(obj, key)
+
+Resolves label from message key or string.
+
+**Parameters:**
+- `obj` (Object) - Object containing label
+- `key` (string) - Key name (`label` or `description`)
+
+**Returns:** (string) Resolved label text
+
+```javascript
+const { resolveLabel } = require('./configRegistry.js');
+
+const label = resolveLabel({ label: { msg: 'citizen-theme-name' } }, 'label');
+// Returns: "Theme"
+
+const direct = resolveLabel({ label: 'Direct Label' }, 'label');
+// Returns: "Direct Label"
+```
+
+## Vue Components
+
+### App.vue
+
+Root preferences component.
+
+**Injected Props:**
+- `preferencesConfig` (NormalizedPreferencesConfig) - Reactive config
+- `themeDefault` (string) - Default theme value
+
+**Computed:**
+- `sections` - Computed sections with preferences
+
+**Data:**
+- `values` (reactive) - Current preference values
+- `visibilities` (reactive) - Preference visibility states
+
+**Methods:**
+
+**setValue(featureName, value)**
+
+Sets a preference value.
+
+**Parameters:**
+- `featureName` (string) - Preference key
+- `value` (string) - New value
+
+**Side Effects:**
+- Updates `mw.storage`
+- Fires `mw.hook('citizen.preferences.changed')`
+- Dispatches window `resize` event
+
+```javascript
+// Internal usage
+setValue('skin-theme', 'night');
+```
+
+### RadioGroup.vue
+
+Custom radio group component with theme preview.
+
+**Props:**
+- `modelValue` (string) - Current value
+- `options` (Array\<Option\>) - Radio options
+- `featureName` (string) - Preference key
+- `columns` (number) - Number of columns (default: 2)
+
+**Events:**
+- `update:modelValue` - Value changed
+
+**Features:**
+- Shows color preview for theme options
+- Grid layout with configurable columns
+- Uses CdxRadio components
+
+## Client Prefs Polyfill
+
+From `clientPrefs.polyfill.js`:
+
+Provides compatibility with MediaWiki's client preferences system.
+
+### clientPrefs()
+
+Factory function returning client prefs interface.
+
+**Methods:**
+
+**get(featureName)**
+
+Gets preference value from storage or document.
+
+**Parameters:**
+- `featureName` (string) - Preference key
+
+**Returns:** (string | null)
+
+```javascript
+const clientPrefs = require('./clientPrefs.polyfill.js')();
+const theme = clientPrefs.get('skin-theme');
+```
+
+**set(featureName, value)**
+
+Sets preference value.
+
+**Parameters:**
+- `featureName` (string) - Preference key
+- `value` (string) - New value
+
+**Side Effects:**
+- Updates `mw.storage`
+- Updates document root classes
+- Fires hooks
+
+```javascript
+clientPrefs.set('skin-theme', 'night');
+```
+
+## Visibility Composable
+
+From `useVisibility.js`:
+
+### useVisibility(condition, themeValue)
+
+Computes visibility based on condition.
+
+**Parameters:**
+- `condition` (string) - Visibility condition (`always` | `dark-theme`)
+- `themeValue` (Ref\<string\>) - Current theme value
+
+**Returns:**
+```javascript
+{
+  isVisible: ComputedRef<boolean>
+}
+```
+
+**Example:**
+```javascript
+const { useVisibility } = require('./useVisibility.js');
+const themeValue = ref('night');
+const { isVisible } = useVisibility('dark-theme', themeValue);
+// isVisible.value === true (because theme is 'night')
+```
+
+**Conditions:**
+- `always` - Always visible
+- `dark-theme` - Visible when theme is `night` (not `os` or `day`)
+
+## Hooks
+
+### citizen.preferences.register
+
+Allows extensions/gadgets to add preferences dynamically.
+
+**Callback:**
+```javascript
+function register(config: PreferencesConfig): void
+```
+
+**Example:**
+```javascript
+mw.hook('citizen.preferences.register').add((register) => {
+  register({
+    sections: {
+      'my-section': {
+        label: 'My Section'
+      }
+    },
+    preferences: {
+      'my-feature': {
+        section: 'my-section',
+        label: 'My Feature',
+        description: 'Enable my custom feature',
+        type: 'switch',
+        options: [
+          { value: '0', label: 'Disabled' },
+          { value: '1', label: 'Enabled' }
+        ]
+      }
+    }
+  });
+});
+```
+
+### citizen.preferences.changed
+
+Fired when any preference changes.
+
+**Parameters:**
+- `featureName` (string) - Changed preference key
+- `value` (string) - New value
+
+**Example:**
+```javascript
+mw.hook('citizen.preferences.changed').add((featureName, value) => {
+  console.log(`Preference ${featureName} changed to ${value}`);
+  
+  if (featureName === 'skin-theme') {
+    // React to theme changes
+  }
+});
+```
+
+## Storage
+
+Preferences are stored in:
+
+- **MediaWiki Storage:** `mw.storage.set('skin-client-pref-{featureName}', value)`
+- **Document Classes:** Applied to `<html>` element as `skin-{featureName}-clientpref-{value}`
+
+**Example:**
+```javascript
+// Setting skin-theme to 'night'
+mw.storage.set('skin-client-pref-skin-theme', 'night');
+// Adds class: skin-theme-clientpref-night
+```
+
+## Configuration Variables
+
+From `skin.json`:
+
+- **wgCitizenEnablePreferences** (boolean) - Enable preferences panel (default: true)
+- **wgCitizenThemeDefault** (string) - Default theme (`auto` | `light` | `dark`, default: `auto`)
+
+These are injected via ResourceLoader callbacks.
+
+## Theme Preview Colors
+
+The App component reads computed CSS properties for theme previews:
+
+```javascript
+function getThemePreviewColors(value) {
+  const root = document.documentElement;
+  // Temporarily apply theme class
+  root.classList.add(`skin-theme-clientpref-${value}`);
+  
+  const styles = getComputedStyle(root);
+  const surface = styles.getPropertyValue('--color-surface-0');
+  const text = styles.getPropertyValue('--color-base');
+  
+  // Restore original classes
+  return { surface, text };
+}
+```
+
+This allows theme options to show live color previews.
+
+## Styling
+
+Key CSS classes:
+
+- `.citizen-preferences` - Main container
+- `.citizen-preferences-section` - Section wrapper
+- `.citizen-preferences-section__heading` - Section heading
+- `.citizen-preferences-section__content` - Section content
+- `.citizen-preferences-group` - Individual preference
+
+## Testing
+
+The module exports `initApp` for testing:
+
+```javascript
+const { initApp } = require('./init.js');
+
+// In tests
+beforeEach(() => {
+  document.body.innerHTML = '<div id="citizen-preferences-content"></div>';
+  initApp();
+});
+```
+
+## Related Modules
+
+- [Scripts](/api/scripts) - Core skin scripts that initialize preferences
+- [Command Palette](/api/command-palette) - Another Vue-based module

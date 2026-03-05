@@ -1,0 +1,69 @@
+---
+title: Configuration Overview
+description: Learn how to configure the Citizen skin for MediaWiki
+---
+
+Citizen provides a comprehensive set of configuration variables to customize the appearance and behavior of your MediaWiki installation. All configuration variables use the `$wgCitizen` prefix and should be set in your `LocalSettings.php` file.
+
+## Requirements
+
+Citizen requires MediaWiki 1.43.0 or higher.
+
+## Configuration Structure
+
+Citizen's configuration is organized into several categories:
+
+- **Theme & Appearance** - Control colors, theme defaults, and visual styling
+- **Search** - Configure search module, gateway, and behavior
+- **Layout** - Control page structure, header position, and responsive features
+- **Features** - Enable or disable specific skin features
+- **Extensions** - Integration settings for MediaWiki extensions
+
+## Quick Start
+
+Add configuration to your `LocalSettings.php` after loading the skin:
+
+```php
+wfLoadSkin( 'Citizen' );
+
+// Example configuration
+$wgCitizenThemeDefault = 'dark';
+$wgCitizenEnableManifest = true;
+$wgCitizenSearchGateway = 'mwRestApi';
+```
+
+## Configuration Categories
+
+<CardGroup cols={2}>
+  <Card title="Theme Configuration" icon="palette" href="/configuration/theme">
+    Customize colors, theme defaults, and PWA settings
+  </Card>
+  <Card title="Search Configuration" icon="magnifying-glass" href="/configuration/search">
+    Configure search modules, gateways, and result display
+  </Card>
+  <Card title="Layout Configuration" icon="layout" href="/configuration/layout">
+    Control page structure, header position, and sections
+  </Card>
+  <Card title="Feature Configuration" icon="toggle-on" href="/configuration/features">
+    Enable or disable skin features like preferences and tools
+  </Card>
+</CardGroup>
+
+## Configuration Scope
+
+All Citizen configuration variables are **global** and apply to all users on your wiki. User-specific preferences are handled through MediaWiki's built-in client preferences system.
+
+## Validation
+
+Citizen validates configuration values at runtime. Invalid values will fall back to defaults and may log warnings. Always test configuration changes in a development environment first.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Theme Settings" icon="brush" href="/configuration/theme">
+    Configure colors and appearance
+  </Card>
+  <Card title="Feature Flags" icon="flag" href="/configuration/features">
+    Enable advanced features
+  </Card>
+</CardGroup>

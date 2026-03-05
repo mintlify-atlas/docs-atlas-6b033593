@@ -1,0 +1,164 @@
+---
+title: Development Setup
+description: Set up your local development environment for the Citizen MediaWiki skin
+---
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **MediaWiki 1.43+**: Citizen requires MediaWiki 1.43 or higher
+- **Node.js**: For JavaScript/Vue development and build tools
+- **Composer**: For PHP dependency management
+- **Docker** (recommended): For the standard development environment
+
+## Standard Development Environment
+
+The recommended development setup uses MediaWiki's Docker environment. This provides a consistent, isolated environment that closely matches production.
+
+<Steps>
+  <Step title="Clone the repository">
+    Fork and clone the Citizen skin repository:
+    
+    ```bash
+    git clone https://github.com/[your-username]/mediawiki-skins-Citizen.git
+    cd mediawiki-skins-Citizen
+    ```
+  </Step>
+
+  <Step title="Set up MediaWiki Docker environment">
+    The standard dev environment is defined in the parent `mediawiki/` directory. Refer to `../../DEVELOPERS.md` in your MediaWiki installation for detailed setup instructions.
+    
+    Typically, you'll place the Citizen skin in `mediawiki/skins/Citizen/`.
+  </Step>
+
+  <Step title="Install dependencies">
+    Install Node.js and Composer dependencies:
+    
+    ```bash
+    npm install
+    ```
+    
+    For Composer dependencies (if running outside Docker):
+    
+    ```bash
+    composer install
+    ```
+  </Step>
+
+  <Step title="Set up Git hooks">
+    Citizen uses Lefthook for Git hooks, which includes commit message validation and pre-commit checks:
+    
+    ```bash
+    npm run prepare
+    ```
+    
+    This installs hooks that:
+    - Validate commit messages follow Conventional Commits
+    - Auto-add emojis to commits based on type
+    - Run basic pre-commit checks
+  </Step>
+
+  <Step title="Enable the skin">
+    Add the following to your `LocalSettings.php`:
+    
+    ```php
+    wfLoadSkin( 'Citizen' );
+    ```
+    
+    Set it as the default skin:
+    
+    ```php
+    $wgDefaultSkin = 'citizen';
+    ```
+  </Step>
+
+  <Step title="Verify installation">
+    Navigate to `Special:Version` on your MediaWiki instance to confirm Citizen is installed and active.
+  </Step>
+</Steps>
+
+## Alternative Setup (Without Docker)
+
+If you're using a different development environment:
+
+1. Ensure you have a working MediaWiki 1.43+ installation
+2. Clone the Citizen repository into `mediawiki/skins/Citizen`
+3. Install dependencies with `npm install` and `composer install`
+4. Enable the skin in `LocalSettings.php`
+
+<Note>
+When working outside the standard Docker environment, you may need to adjust commands and paths. The documentation assumes the Docker setup unless noted otherwise.
+</Note>
+
+## Running Commands in Docker
+
+When using the Docker development environment, run composer commands inside the container:
+
+```bash
+docker compose exec mediawiki bash -c "cd /var/www/html/w/skins/Citizen && composer preflight"
+```
+
+Node.js commands can typically be run directly from your host machine:
+
+```bash
+npm run preflight
+```
+
+## Verification & Testing
+
+Before making changes, verify your setup by running the test suite:
+
+### Node.js Tests
+
+```bash
+# Run all linters and tests
+npm run preflight
+
+# Individual checks
+npm run lint:js      # JavaScript linting
+npm run lint:styles  # LESS/CSS linting
+npm test             # Run Vitest tests
+```
+
+### PHP Tests
+
+```bash
+# Run all PHP checks (inside Docker or MW installation)
+composer preflight
+
+# Individual checks
+composer test        # Lint, style check, executable check
+composer phan        # Static analysis
+composer phpunit     # Unit tests
+```
+
+## Development Workflow
+
+1. **Create a feature branch**:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **Make your changes** following the [coding conventions](/development/contributing#coding-conventions)
+
+3. **Run relevant checks** based on files changed (see [Testing](/development/testing))
+
+4. **Commit with Conventional Commits**:
+   ```bash
+   git commit -m "feat: add new feature"
+   ```
+   The pre-commit hook will automatically add emojis and run basic checks.
+
+5. **Push and create a pull request**
+
+<Warning>
+Always run the relevant preflight checks before committing. PHPCS warnings must be fixed, not just errors. The command exits 0 even with warnings, so don't rely on exit code alone.
+</Warning>
+
+## Next Steps
+
+- Learn about the [Architecture](/development/architecture)
+- Explore the [Component System](/development/components)
+- Review [Testing Guidelines](/development/testing)
+- Read the [Contributing Guide](/development/contributing)

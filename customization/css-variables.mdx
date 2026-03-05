@@ -1,0 +1,309 @@
+---
+title: CSS Variables Reference
+description: Complete reference guide for all CSS custom properties available in the Citizen skin
+---
+
+This page provides a comprehensive reference of all CSS variables (custom properties) available in the Citizen MediaWiki skin. These variables can be overridden in your custom stylesheets to customize the appearance of your wiki.
+
+## Color Variables
+
+### Progressive Color (Primary Accent)
+
+The progressive color is the primary accent color used throughout the theme.
+
+| Variable | Default (Light) | Description |
+|----------|----------------|-------------|
+| `--color-progressive-oklch__l` | `53.25%` | Lightness (OKLCH) |
+| `--color-progressive-oklch__c` | `0.1679` | Chroma/saturation (OKLCH) |
+| `--color-progressive-oklch__h` | `262.29` | Hue (OKLCH) - Purple |
+| `--color-progressive-hsl__h` | `220` | Hue (HSL fallback) |
+| `--color-progressive-hsl__s` | `60%` | Saturation (HSL fallback) |
+| `--color-progressive-hsl__l` | `50%` | Lightness (HSL fallback) |
+| `--color-progressive` | (computed) | Final progressive color |
+| `--color-progressive--hover` | (computed) | Progressive color hover state |
+| `--color-progressive--active` | (computed) | Progressive color active state |
+
+### Surface Colors
+
+Surface colors create visual hierarchy and depth.
+
+| Variable | Light Mode | Dark Mode | Description |
+|----------|-----------|-----------|-------------|
+| `--color-surface-0-oklch__l` | `96%` | `14%` | Base surface lightness |
+| `--color-surface-0-oklch__c` | `0.01` | `0.01` | Base surface chroma |
+| `--color-surface-0` | (computed) | (computed) | Base background color |
+| `--color-surface-1` | (computed) | (computed) | Elevated surface level 1 |
+| `--color-surface-1--hover` | (computed) | (computed) | Surface 1 hover state |
+| `--color-surface-1--active` | (computed) | (computed) | Surface 1 active state |
+| `--color-surface-2` | (computed) | (computed) | Elevated surface level 2 |
+| `--color-surface-2--hover` | (computed) | (computed) | Surface 2 hover state |
+| `--color-surface-2--active` | (computed) | (computed) | Surface 2 active state |
+| `--color-surface-3` | (computed) | (computed) | Elevated surface level 3 |
+| `--color-surface-4` | (computed) | (computed) | Elevated surface level 4 |
+
+### Text Colors
+
+| Variable | Light Mode | Dark Mode | Description |
+|----------|-----------|-----------|-------------|
+| `--color-emphasized-oklch__l` | `5%` | `93%` | High emphasis text |
+| `--color-emphasized-oklch__c` | `0.07` | `0.03` | High emphasis chroma |
+| `--color-base-oklch__l` | `20%` | `80%` | Regular text |
+| `--color-base-oklch__c` | `0.09` | `0.05` | Regular text chroma |
+| `--color-subtle-oklch__l` | `35%` | `70%` | De-emphasized text |
+| `--color-subtle-oklch__c` | `0.11` | `0.07` | De-emphasized chroma |
+| `--color-placeholder-oklch__l` | `40%` | `60%` | Placeholder text |
+| `--color-disabled-oklch__l` | `60%` | `50%` | Disabled text |
+
+### Link Colors
+
+| Variable | Description |
+|----------|-------------|
+| `--color-link` | Default link color |
+| `--color-link--hover` | Link hover state |
+| `--color-link--active` | Link active state |
+| `--color-link-red` | Red links (non-existent pages) |
+| `--color-visited` | Visited link color |
+| `--color-visited--hover` | Visited link hover |
+| `--color-visited--active` | Visited link active |
+
+### State Colors
+
+| Variable | Light | Dark | Description |
+|----------|-------|------|-------------|
+| `--color-destructive__h` | `340` | `340` | Destructive action hue (red) |
+| `--color-destructive__l` | `40%` | `50%` | Destructive lightness |
+| `--color-success__h` | `170` | `170` | Success state hue (green) |
+| `--color-success__l` | `17%` | `35%` | Success lightness |
+| `--color-warning__h` | `48` | `48` | Warning state hue (orange) |
+| `--color-warning__l` | `40%` | `60%` | Warning lightness |
+| `--color-inverted-primary` | `#fff` | `#fff` | Inverted text color |
+| `--color-inverted-fixed` | (computed) | (computed) | Fixed inverted color |
+
+### Syntax Highlighting Colors
+
+| Variable | Light | Dark |
+|----------|-------|------|
+| `--color-syntax-red` | `#e53935` | `#f07178` |
+| `--color-syntax-orange` | `#f76d47` | `#f78c6c` |
+| `--color-syntax-yellow` | `#e2931d` | `#ffcb6b` |
+| `--color-syntax-green` | `#91b859` | `#c3e88d` |
+| `--color-syntax-cyan` | `#39adb5` | `#89ddff` |
+| `--color-syntax-blue` | `#6182b8` | `#82aaff` |
+| `--color-syntax-purple` | `#9c3eda` | `#c792ea` |
+| `--color-syntax-pink` | `#ff5370` | `#ff9cac` |
+
+## Border Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `--border-width-base` | `1px` | Standard border width |
+| `--border-width-thick` | `2px` | Thick border width |
+| `--border-radius-base` | `4px` | Base border radius |
+| `--border-radius-medium` | `8px` | Medium border radius |
+| `--border-radius-large` | `12px` | Large border radius |
+| `--border-radius-pill` | `9999px` | Pill-shaped radius |
+| `--border-radius-circle` | `50%` | Circular radius |
+| `--border-radius-sharp` | `0` | No border radius |
+| `--border-color-base` | (computed) | Default border color |
+| `--border-color-subtle` | (computed) | Subtle border color |
+| `--border-color-muted` | (computed) | Muted border color |
+| `--border-color-interactive` | (computed) | Interactive element border |
+| `--border-color-progressive--focus` | (computed) | Focus state border |
+| `--border-base` | (computed) | Complete border declaration |
+| `--border-subtle` | (computed) | Subtle border declaration |
+
+## Spacing Variables
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `--space-unit` | `1rem` | Base spacing unit |
+| `--space-xxs` | `0.25rem` | Extra extra small spacing |
+| `--space-xs` | `0.5rem` | Extra small spacing |
+| `--space-sm` | `0.75rem` | Small spacing |
+| `--space-md` | `1rem` | Medium spacing |
+| `--space-lg` | `1.25rem` | Large spacing |
+| `--space-xl` | `1.5rem` | Extra large spacing |
+| `--space-xxl` | `2rem` | Extra extra large spacing |
+
+## Size Variables
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `--size-icon` | `1.25rem` | Standard icon size |
+| `--header-size` | `3.5rem` | Header height/width |
+| `--toolbar-size` | `2.5rem` | Toolbar height |
+| `--width-layout` | `1080px` | Maximum content width |
+| `--width-layout--extended` | `1620px` | Extended layout width |
+| `--width-toc` | `240px` | Table of contents width |
+| `--width-page` | `1080px` | Page content width |
+| `--padding-page` | `16px` (responsive) | Page side padding |
+| `--height-sticky-header` | `0px` (dynamic) | Sticky header height |
+| `--header-card-maxheight` | `80vh` | Maximum header card height |
+| `--overflow-gradient-size` | `2rem` | Overflow gradient width |
+
+## Typography Variables
+
+### Font Families
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `--font-family-base` | `Roboto, system-ui, sans-serif` | Base sans-serif font |
+| `--font-family-serif` | `Roboto Serif, Georgia, serif` | Serif font |
+| `--font-family-monospace` | `Roboto Mono, Consolas, monospace` | Monospace font |
+| `--font-family-overline` | (computed) | Overline/label font |
+
+### Font Sizes
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `--font-size-x-small` | (Codex) | Extra small text |
+| `--font-size-small` | (Codex) | Small text |
+| `--font-size-medium` | (Codex) | Body text |
+| `--font-size-large` | (Codex) | Large text |
+| `--font-size-x-large` | (Codex) | Heading 3 |
+| `--font-size-xx-large` | (Codex) | Heading 2 |
+| `--font-size-xxx-large` | (Codex) | Heading 1 |
+| `--font-size-overline` | (computed) | Label/overline text |
+
+### Font Weights
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `--font-weight-normal` | `400` | Regular text |
+| `--font-weight-medium` | `500` | Medium emphasis |
+| `--font-weight-semi-bold` | `600` | Semi-bold |
+| `--font-weight-bold` | `700` | Bold text |
+| `--font-weight-overline` | `500` | Overline weight |
+
+### Line Heights
+
+| Variable | Description |
+|----------|-------------|
+| `--line-height-small` | Small text line height |
+| `--line-height-medium` | Body text line height |
+| `--line-height-large` | Large text line height |
+| `--line-height-x-large` | Heading 3 line height |
+| `--line-height-xx-large` | Heading 2 line height |
+| `--line-height-xxx-large` | Heading 1 line height |
+
+## Transition Variables
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `--transition-duration-base` | `100ms` | Base transition duration |
+| `--transition-duration-medium` | `250ms` | Medium transition duration |
+| `--transition-delay-menu` | `100ms` | Menu transition delay |
+| `--transition-hover` | (computed) | Hover transition |
+| `--transition-menu` | (computed) | Menu transition |
+| `--transition-timing-function-ease` | `cubic-bezier(...)` | Ease timing function |
+| `--transition-timing-function-ease-in` | `cubic-bezier(...)` | Ease-in timing |
+| `--transition-timing-function-ease-out` | `cubic-bezier(...)` | Ease-out timing |
+
+## Shadow Variables
+
+| Variable | Description |
+|----------|-------------|
+| `--box-shadow-small` | Small shadow |
+| `--box-shadow-medium` | Medium shadow |
+| `--box-shadow-large` | Large shadow |
+| `--box-shadow-border` | Border-like shadow |
+| `--box-shadow-color-alpha-base` | Shadow color with alpha |
+| `--shadow-opacity` | Shadow opacity (0.03 light, 0.44 dark) |
+
+## Filter Variables
+
+| Variable | Light | Dark | Description |
+|----------|-------|------|-------------|
+| `--filter-invert` | `none` | `invert(1) hue-rotate(180deg)` | Invert filter |
+| `--filter-invert-fixed` | `invert(1) hue-rotate(180deg)` | Always inverted |
+| `--filter-image-brightness` | `none` | `none` | Image brightness filter |
+| `--backdrop-filter-frosted-glass` | `blur(16px) saturate(140%)` | Frosted glass effect |
+
+## Opacity Variables
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `--opacity-glass` | `0.9` (light), `0.8` (dark) | Glass effect opacity |
+| `--opacity-icon-base` | (computed) | Icon opacity |
+| `--opacity-icon-base--hover` | (computed) | Icon hover opacity |
+| `--opacity-icon-base--active` | (computed) | Icon active opacity |
+| `--backdrop-opacity` | `0.65` | Backdrop opacity |
+
+## State Modifiers
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `--delta-lightness-state-base` | `4%` | Base state lightness change |
+| `--delta-lightness-hover-state` | `4%` | Hover lightness adjustment |
+| `--delta-lightness-active-state` | `-4%` | Active lightness adjustment |
+| `--delta-lightness-surface-base` | `-2%` (light), `2%` (dark) | Surface level lightness step |
+
+## Background Colors
+
+| Variable | Description |
+|----------|-------------|
+| `--background-color-progressive` | Progressive button background |
+| `--background-color-progressive--hover` | Progressive button hover |
+| `--background-color-progressive--active` | Progressive button active |
+| `--background-color-destructive` | Destructive button background |
+| `--background-color-destructive--hover` | Destructive button hover |
+| `--background-color-destructive--active` | Destructive button active |
+| `--background-color-icon` | Icon background |
+| `--background-color-icon--hover` | Icon hover background |
+| `--background-color-icon--active` | Icon active background |
+| `--background-color-button-quiet--hover` | Quiet button hover |
+| `--background-color-button-quiet--active` | Quiet button active |
+
+## Header Position Variables
+
+These variables control header placement and are set automatically based on configuration.
+
+| Variable | Description |
+|----------|-------------|
+| `--header-direction` | `row` or `column` |
+| `--header-size-inline-start` | Left side header size |
+| `--header-size-inline-end` | Right side header size |
+| `--header-size-block-start` | Top header size |
+| `--header-size-block-end` | Bottom header size |
+| `--header-inset-*` | Header positioning |
+| `--header-border-*-width` | Header border widths |
+| `--header-offset-block-start` | Offset for sticky elements |
+
+## Usage Examples
+
+### Override Primary Color
+
+```css
+:root {
+  --color-progressive-oklch__h: 180; /* Cyan */
+}
+```
+
+### Increase Content Width
+
+```css
+:root {
+  --width-layout: 1280px;
+}
+```
+
+### Custom Spacing Scale
+
+```css
+:root {
+  --space-unit: 1.25rem; /* Larger spacing */
+}
+```
+
+### Adjust Border Radius
+
+```css
+:root {
+  --border-radius-base: 8px; /* More rounded */
+}
+```
+
+## Related
+
+- [Theming](/customization/theming) - Learn about theme customization
+- [Resource Loader](/customization/resource-loader) - How to load custom styles

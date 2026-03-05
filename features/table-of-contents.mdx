@@ -1,0 +1,387 @@
+---
+title: "Table of Contents"
+description: "Dynamic navigation sidebar that tracks your reading position and manages section hierarchy"
+---
+
+## Overview
+
+The Table of Contents (ToC) provides an interactive navigation sidebar that displays the page's section structure. It tracks your reading position, allows expanding/collapsing of nested sections, and enables quick navigation to any part of the page.
+
+<Note>
+The Table of Contents is automatically generated from page headings and updates dynamically as you navigate the page.
+</Note>
+
+## Features
+
+- **Active section highlighting** - Shows your current position in the document
+- **Collapsible subsections** - Expand/collapse nested sections to reduce clutter
+- **Keyboard and mouse navigation** - Multiple ways to interact
+- **Smooth scrolling** - Animated scroll to selected sections
+- **Auto-expand on navigation** - Opens relevant sections when jumping to headings
+- **Persistent state** - Remembers which sections you've expanded
+- **Hash change support** - Updates when URL hash changes
+
+## User Interface
+
+### Structure
+
+The ToC displays a hierarchical list of page sections:
+
+```
+1. First Top-Level Section ▼
+   1.1 Subsection
+   1.2 Subsection
+2. Second Top-Level Section ▼
+   2.1 Subsection
+       2.1.1 Nested subsection
+3. Third Top-Level Section ▼
+```
+
+### Visual Indicators
+
+- **▼ Toggle arrow** - Click to expand/collapse subsections
+- **Bold text** - Active top-level section
+- **Highlight background** - Currently visible section
+- **Indentation** - Shows section hierarchy
+
+### Collapsible Sections
+
+Top-level sections with subsections can be collapsed:
+
+- **Collapsed** - Shows only the parent heading
+- **Expanded** - Shows all subsections
+- **Auto-collapse** - Enabled when page has 4+ level-1 sections and enough total sections
+
+<Tip>
+The ToC automatically collapses subsections on long pages to reduce visual clutter. Sections expand when you navigate to them.
+</Tip>
+
+## Interactions
+
+### Clicking Links
+
+1. **Click a section link** - Navigates to that section
+2. **ToC highlights the active section** - Shows where you are
+3. **Parent sections expand** - Reveals subsection hierarchy
+4. **Smooth scroll** - Page scrolls smoothly to the heading
+
+### Toggle Buttons
+
+Click the ▼ arrow to expand/collapse subsections:
+
+- **Collapsed** → Click to expand and show subsections
+- **Expanded** → Click to collapse and hide subsections
+- **State persists** - Stays expanded until you collapse it
+
+### Keyboard Navigation
+
+- **Click any ToC link** - Standard keyboard navigation works
+- **Tab** - Move between ToC links
+- **Enter** - Navigate to selected section
+
+### Pinned/Unpinned
+
+On desktop, the ToC can be pinned or unpinned:
+
+- **Pinned** - Always visible in sidebar
+- **Unpinned** - Hidden, can be toggled
+
+## Automatic Active Section Tracking
+
+The ToC automatically highlights the section you're currently reading:
+
+1. **Scroll observer** monitors your position (implemented separately)
+2. **Active section changes** as you scroll
+3. **ToC updates** to highlight current section
+4. **Parent sections expand** if needed
+5. **ToC scrolls** to keep active section visible
+
+<Note>
+Active section tracking is handled by the section observer system, which works in conjunction with the ToC.
+</Note>
+
+## Configuration
+
+### Collapse Threshold
+
+The ToC auto-collapses subsections based on page size. Configure the threshold in `tableOfContentsConfig.json`:
+
+```json
+{
+  "CitizenTableOfContentsCollapseAtCount": 12
+}
+```
+
+Collapsing is enabled when:
+- Page has 4+ level-1 sections AND
+- Total section count ≥ `CitizenTableOfContentsCollapseAtCount`
+
+### CSS Classes
+
+The ToC uses specific CSS classes for styling and behavior:
+
+```javascript
+ACTIVE_SECTION_CLASS = 'citizen-toc-list-item--active'
+ACTIVE_TOP_SECTION_CLASS = 'citizen-toc-level-1--active'
+EXPANDED_SECTION_CLASS = 'citizen-toc-list-item--expanded'
+TOP_SECTION_CLASS = 'citizen-toc-level-1'
+LINK_CLASS = 'citizen-toc-link'
+TOGGLE_CLASS = 'citizen-toc-toggle'
+```
+
+## Technical Implementation
+
+### Architecture
+
+The ToC is implemented as a JavaScript class:
+
+```javascript
+const tableOfContents = new TableOfContents({
+  container: document.getElementById('mw-panel-toc-list'),
+  onHeadingClick: (id) => { /* handle click */ },
+  onHashChange: (id) => { /* handle hash change */ },
+  onToggleClick: (id) => { /* handle toggle */ },
+  onTogglePinned: () => { /* handle pin toggle */ },
+  window: window,
+  document: document,
+  mw: mw
+});
+```
+
+### Key Methods
+
+#### Section Management
+
+```javascript
+// Activate a section
+tableOfContents.activateSection('toc-section-id');
+
+// Deactivate all sections
+tableOfContents.deactivateSections();
+
+// Change active section (deactivate + activate)
+tableOfContents.changeActiveSection('toc-section-id');
+```
+
+#### Expand/Collapse
+
+```javascript
+// Expand a section
+tableOfContents.expandSection('toc-section-id');
+
+// Collapse sections
+tableOfContents.collapseSections(['toc-section-id']);
+
+// Toggle a section
+tableOfContents.toggleExpandSection('toc-section-id');
+
+// Get expanded section IDs
+const expanded = tableOfContents.getExpandedSectionIds();
+```
+
+#### Scrolling
+
+```javascript
+// Scroll active section into view
+tableOfContents.scrollToActiveSection('toc-section-id');
+```
+
+Scroll behavior respects `prefers-reduced-motion`:
+
+```javascript
+const scrollBehavior = this.prefersReducedMotion() ? undefined : 'smooth';
+```
+
+### Dynamic Reloading
+
+The ToC can reload dynamically when content changes (e.g., after editing):
+
+```javascript
+tableOfContents.reloadTableOfContents(sections).then(() => {
+  console.log('ToC reloaded with', sections.length, 'sections');
+});
+```
+
+The reload process:
+1. Saves expanded section IDs
+2. Re-renders ToC HTML from section data
+3. Re-expands previously expanded sections
+4. Restores active section highlighting
+
+### Section Data Format
+
+```javascript
+{
+  toclevel: 1,
+  anchor: 'Section_Title',
+  line: 'Section Title',
+  number: '1',
+  index: '1',
+  'is-top-level-section': true,
+  'is-parent-section': true,
+  'array-sections': [ /* subsections */ ]
+}
+```
+
+## Event Handling
+
+### Hash Changes
+
+The ToC listens for URL hash changes:
+
+```javascript
+window.addEventListener('hashchange', () => {
+  // Parse hash from URL
+  // Find matching ToC item
+  // Expand and activate section
+});
+```
+
+### Click Events
+
+Delegated click handler on ToC container:
+
+```javascript
+container.addEventListener('click', (e) => {
+  const tocSection = e.target.closest('.citizen-toc-list-item');
+  
+  if (e.target.closest('.citizen-toc-link')) {
+    // Handle link click
+  }
+  
+  if (e.target.closest('.citizen-toc-toggle')) {
+    // Handle toggle click
+  }
+});
+```
+
+## Accessibility
+
+### ARIA Attributes
+
+Toggle buttons include proper ARIA attributes:
+
+```html
+<button class="citizen-toc-toggle" 
+        aria-expanded="false"
+        aria-label="Toggle Section subsection">
+  ▼
+</button>
+```
+
+### Keyboard Support
+
+- **Tab navigation** - All links and buttons are focusable
+- **Enter/Space** - Activate links and buttons
+- **Focus visible** - Clear visual focus indicators
+
+### Reduced Motion
+
+Respects user preferences for reduced motion:
+
+```javascript
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  // Disable smooth scrolling
+  // Use instant scroll instead
+}
+```
+
+## Integration with Other Features
+
+### Section Observer
+
+Works with the section observer to track reading position:
+
+```javascript
+// Section observer calls changeActiveSection when scrolling
+sectionObserver.on('active-section-changed', (sectionId) => {
+  tableOfContents.changeActiveSection(`toc-${sectionId}`);
+});
+```
+
+### Collapsible Sections
+
+When collapsible sections are enabled:
+- ToC navigation still works
+- Clicking ToC link expands collapsed sections
+- `hidden="until-found"` allows browser to auto-expand
+
+### Sticky Header
+
+ToC accounts for sticky header offset:
+- Scroll calculations consider header height
+- Active section detection compensates for fixed header
+
+## Best Practices
+
+<Tip>
+Use clear, descriptive heading text - it appears directly in the ToC and helps users understand the page structure.
+</Tip>
+
+<Note>
+Limit nesting depth to 3-4 levels maximum. Deeper nesting makes the ToC harder to navigate and understand.
+</Note>
+
+<Tip>
+For very long pages, consider breaking content into multiple pages. The ToC helps with navigation but doesn't replace good information architecture.
+</Tip>
+
+## Customization
+
+### Styling
+
+Customize ToC appearance with CSS:
+
+```css
+.citizen-toc-list-item--active {
+  background-color: var(--your-color);
+  font-weight: bold;
+}
+
+.citizen-toc-toggle {
+  /* Custom toggle button style */
+}
+```
+
+### Behavior
+
+Extend ToC behavior with hooks:
+
+```javascript
+// Listen for ToC events
+document.addEventListener('citizen.toc.section-activated', (e) => {
+  console.log('Section activated:', e.detail.sectionId);
+});
+```
+
+## Troubleshooting
+
+### ToC Not Appearing
+
+1. Check that page has headings (h2, h3, etc.)
+2. Verify `mw-panel-toc-list` container exists
+3. Check that `skins.citizen.scripts` module loaded
+
+### Active Section Not Highlighting
+
+1. Ensure section observer is running
+2. Check that ToC section IDs match page heading IDs
+3. Verify no JavaScript errors in console
+
+### Sections Not Expanding
+
+1. Check that toggle buttons have correct classes
+2. Verify ARIA attributes are set correctly
+3. Ensure click event listeners are attached
+
+## Performance Considerations
+
+- **Efficient DOM queries** - Uses `getElementById` and `closest()`
+- **Event delegation** - Single click listener on container
+- **Throttled updates** - Section activation is debounced
+- **Smooth scroll** - Hardware-accelerated when supported
+- **Lazy initialization** - Only activates when ToC exists on page
+
+<Tip>
+The ToC efficiently handles pages with 100+ sections through event delegation and minimal DOM manipulation.
+</Tip>

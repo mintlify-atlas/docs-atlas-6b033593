@@ -1,0 +1,261 @@
+---
+title: "Collapsible Sections"
+description: "Collapse and expand page sections for easier navigation of long articles"
+---
+
+## Overview
+
+Collapsible sections allow users to collapse and expand page sections by clicking on section headings. This feature helps navigate long articles by hiding content that isn't immediately relevant, improving readability and reducing scrolling.
+
+<Note>
+Collapsible sections are enabled per-page based on configuration. The feature requires the `citizen-sections-enabled` CSS class on the `<body>` element.
+</Note>
+
+## How It Works
+
+### User Experience
+
+When collapsible sections are enabled:
+
+1. **Section headings become interactive** - Clicking a heading toggles the section's visibility
+2. **Visual indicators** - Section headings show clickable styling
+3. **Smooth transitions** - Sections expand and collapse with animation
+4. **Preserved edit links** - Edit section links remain functional and don't trigger collapse
+
+### Interaction
+
+- **Click heading** - Toggle the section open/closed
+- **Click edit link** - Edit section (doesn't trigger collapse)
+- **Sections collapse to `hidden="until-found"`** - Browser can still find text in collapsed sections
+
+<Tip>
+The `hidden="until-found"` attribute allows browser find-in-page (Ctrl+F) to automatically expand collapsed sections when searching.
+</Tip>
+
+## Enabling Collapsible Sections
+
+Collapsible sections are controlled by the presence of the `citizen-sections-enabled` class on the body:
+
+```html
+<body class="citizen-sections-enabled">
+  <!-- Page content -->
+</body>
+```
+
+This class is typically added server-side through MediaWiki configuration or page-specific settings.
+
+## HTML Structure
+
+Collapsible sections use a specific HTML structure:
+
+```html
+<!-- Section heading -->
+<h2 class="citizen-section-heading">
+  Section Title
+  <span class="mw-editsection">
+    <a href="/edit">edit</a>
+  </span>
+</h2>
+
+<!-- Collapsible section content -->
+<section class="citizen-section" hidden="until-found">
+  <p>Section content...</p>
+</section>
+```
+
+### Required Classes
+
+- `citizen-section-heading` - Applied to heading elements (h2, h3, etc.)
+- `citizen-section` - Applied to the collapsible content container
+- `mw-editsection` or `mw-editsection-like` - Edit links that shouldn't trigger collapse
+
+## Implementation Details
+
+### JavaScript Behavior
+
+The collapsible sections feature is implemented in `sections.js`:
+
+```javascript
+function init() {
+  if (!document.body.classList.contains('citizen-sections-enabled')) {
+    return;
+  }
+
+  const handleClick = (e) => {
+    const heading = e.target.closest('.citizen-section-heading');
+    
+    if (heading && heading.nextElementSibling) {
+      const section = heading.nextElementSibling;
+      
+      if (section.classList.contains('citizen-section')) {
+        section.hidden = section.hidden ? false : 'until-found';
+      }
+    }
+  };
+
+  bodyContent.addEventListener('click', handleClick, false);
+}
+```
+
+### Event Handling
+
+1. **Click event bubbles up** to the body content container
+2. **Check if click target is within a heading** using `closest('.citizen-section-heading')`
+3. **Ignore edit section links** by checking for `mw-editsection` classes
+4. **Toggle the next sibling element** if it has the `citizen-section` class
+5. **Set `hidden` attribute** to either `false` (visible) or `'until-found'` (collapsed)
+
+<Note>
+The `hidden="until-found"` value is a modern HTML feature that allows collapsed content to be found by browser search functionality.
+</Note>
+
+## Styling
+
+Collapsible sections require corresponding CSS to provide visual feedback:
+
+```less
+.citizen-section-heading {
+  cursor: pointer;
+  
+  &:hover {
+    // Visual hover state
+  }
+}
+
+.citizen-section {
+  &[hidden="until-found"] {
+    // Collapsed state
+  }
+}
+```
+
+## Accessibility
+
+The collapsible sections feature includes accessibility considerations:
+
+- **Semantic HTML** - Uses proper heading hierarchy
+- **`hidden="until-found"`** - Modern HTML attribute for collapsible content
+- **Keyboard accessible** - Headings are clickable via keyboard
+- **Edit links preserved** - Accessibility of edit functionality maintained
+
+### Screen Readers
+
+Consider adding ARIA attributes for better screen reader support:
+
+```html
+<h2 class="citizen-section-heading" 
+    role="button" 
+    aria-expanded="false"
+    aria-controls="section-1">
+  Section Title
+</h2>
+
+<section class="citizen-section" 
+         id="section-1" 
+         hidden="until-found">
+  Content...
+</section>
+```
+
+## Integration with Table of Contents
+
+Collapsible sections work in conjunction with the Table of Contents feature. When a TOC link is clicked:
+
+1. Browser navigates to the heading anchor
+2. If the section is collapsed, the browser automatically expands it (due to `hidden="until-found"`)
+3. The page scrolls to the heading
+4. User sees the relevant content
+
+## Configuration Options
+
+While collapsible sections don't have user-facing preferences, administrators can control when they're enabled:
+
+### Per-Page Control
+
+Use page properties or templates to add the enabling class:
+
+```php
+$out->addBodyClasses('citizen-sections-enabled');
+```
+
+### Global Configuration
+
+In `LocalSettings.php`, you can enable collapsible sections for specific namespaces or conditions:
+
+```php
+$wgHooks['BeforePageDisplay'][] = function($out) {
+  if ($out->getTitle()->getNamespace() === NS_MAIN) {
+    $out->addBodyClasses('citizen-sections-enabled');
+  }
+};
+```
+
+## Best Practices
+
+<Tip>
+Enable collapsible sections on long articles where users might benefit from hiding content they're not actively reading.
+</Tip>
+
+<Note>
+Avoid using collapsible sections on very short articles - they add complexity without benefit.
+</Note>
+
+<Tip>
+Consider starting with all sections expanded by default, allowing users to collapse sections as needed rather than forcing them to expand to find content.
+</Tip>
+
+## Browser Compatibility
+
+The `hidden="until-found"` attribute is supported in:
+
+- Chrome/Edge 102+
+- Safari 16+
+- Firefox (behind flag)
+
+For older browsers, sections will be fully hidden when collapsed, and browser find-in-page won't automatically expand them.
+
+## Technical Dependencies
+
+- **ResourceLoader module**: `skins.citizen.scripts`
+- **JavaScript file**: `resources/skins.citizen.scripts/sections.js`
+- **Dependencies**: MediaWiki core, DOM APIs
+- **Initialization**: Automatic on page load
+
+## Example Use Case
+
+### Documentation Wiki
+
+For a software documentation wiki:
+
+1. Enable collapsible sections on all documentation pages
+2. Users can collapse completed sections as they work through tutorials
+3. Long reference pages become more navigable
+4. Find-in-page still works for searching specific terms
+
+### Encyclopedia
+
+For an encyclopedia-style wiki:
+
+1. Enable on articles with 5+ sections
+2. Readers can focus on sections of interest
+3. Overview sections can remain visible while details are collapsed
+4. Mobile users benefit from reduced scrolling
+
+## Troubleshooting
+
+### Sections Don't Collapse
+
+1. Check that `citizen-sections-enabled` class is on `<body>`
+2. Verify section HTML structure matches required format
+3. Ensure JavaScript hasn't been disabled
+4. Check browser console for errors
+
+### Edit Links Trigger Collapse
+
+1. Ensure edit links have `mw-editsection` or `mw-editsection-like` class
+2. Check that event handler properly filters edit section clicks
+
+### Sections Don't Expand from Search
+
+1. Verify `hidden="until-found"` attribute is used (not just `hidden`)
+2. Check browser compatibility for `hidden="until-found"` feature

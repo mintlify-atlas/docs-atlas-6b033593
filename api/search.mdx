@@ -1,0 +1,339 @@
+---
+title: Search Module
+description: Client-side search typeahead and suggestion system for the Citizen skin
+---
+
+The search module provides an interactive typeahead search experience with suggestions, history, and multiple search client support.
+
+## Module Configuration
+
+**Module Name:** `skins.citizen.search`
+
+**Dependencies:**
+- `mediawiki.storage`
+- `mediawiki.template.mustache`
+- `mediawiki.user`
+- `mediawiki.util`
+
+**Entry Point:** `resources/skins.citizen.search/main.js`
+
+## Core Components
+
+### Main Initialization
+
+The search module auto-initializes on page load:
+
+```javascript
+function initSearchLoader() {
+  const searchForm = document.getElementById('searchform');
+  const searchInput = document.getElementById('searchInput');
+
+  if (searchForm && searchInput) {
+    const typeahead = require('./typeahead.js');
+    typeahead.init(searchForm, searchInput);
+  }
+}
+
+initSearchLoader();
+```
+
+### Typeahead System
+
+The typeahead component manages the search interface, keyboard navigation, and result display.
+
+#### typeahead.init(formEl, inputEl)
+
+Initializes the typeahead interface.
+
+**Parameters:**
+- `formEl` (HTMLFormElement) - The search form element
+- `inputEl` (HTMLInputElement) - The search input element
+
+**Example:**
+```javascript
+const typeahead = require('./typeahead.js');
+typeahead.init(document.getElementById('searchform'), document.getElementById('searchInput'));
+```
+
+#### Typeahead Properties
+
+**form**
+- `element` (HTMLFormElement | undefined) - The form element
+- `isLoading` (boolean) - Loading state
+- `init(formEl)` - Initialize the form
+- `setLoadingState(state)` - Set loading state
+
+**input**
+- `element` (HTMLInputElement | undefined) - The input element
+- `displayElement` (HTMLElement | undefined) - Overlay element for display
+- `isComposing` (boolean) - IME composition state
+- `init(inputEl)` - Initialize the input
+- `onFocus()` - Focus event handler
+- `onInput()` - Input event handler
+- `onKeydown(event)` - Keydown event handler
+
+**items**
+- `elements` (NodeList | undefined) - Suggestion item elements
+- `index` (number) - Currently highlighted index
+- `max` (number) - Maximum number of items
+- `setMax(x)` - Set maximum items
+- `increment(i)` - Move selection by i positions
+- `setIndex(i)` - Set selection index
+- `clearIndex()` - Clear selection
+- `toggle(item)` - Toggle active state on item
+- `bindMouseHoverEvent()` - Bind hover events
+- `set()` - Update items list
+
+#### Keyboard Navigation
+
+The typeahead supports:
+- **ArrowUp/ArrowDown** - Navigate through suggestions
+- **Enter** - Select highlighted suggestion
+- **Escape** - Close suggestions (via blur)
+
+### Search Client
+
+Manages different search API backends.
+
+#### searchClient(config)
+
+Factory function that creates a search client manager.
+
+**Returns:** Search client object with:
+- `active` (Object | null) - Currently active search client
+- `getData(key, value)` - Find client data by key/value
+- `setActive(id)` - Set active search client by ID
+
+**Available Clients:**
+- `mwActionApi` - MediaWiki Action API
+- `mwRestApi` - MediaWiki REST API
+- `smwAskApi` - Semantic MediaWiki Ask API
+
+**Example:**
+```javascript
+const config = require('./config.json');
+const searchClient = require('./searchClient.js')(config);
+
+searchClient.setActive('mwRestApi');
+const results = await searchClient.active.client.fetchByTitle('Example');
+```
+
+#### Client Configuration
+
+Search clients are configured in `searchClients/searchClients.json` and loaded dynamically.
+
+### Search History
+
+Manages local storage of search queries.
+
+#### searchHistory(config)
+
+Factory function for search history management.
+
+**Returns:** History manager with:
+- `data` (Array) - History items
+- `limit` (number) - Maximum items (from config.wgCitizenMaxSearchResults)
+- `get()` - Get history array
+- `set(arr)` - Set history array
+- `add(query)` - Add query to history
+- `clear()` - Clear all history
+- `init()` - Load from storage
+
+**Storage Key:** `skin-citizen-search-history`
+
+**Example:**
+```javascript
+const config = require('./config.json');
+const searchHistory = require('./searchHistory.js')(config);
+
+searchHistory.init();
+const history = searchHistory.get();
+searchHistory.add('New search term');
+```
+
+### Search Results
+
+Handles fetching and rendering search results.
+
+#### searchResults()
+
+Factory function that returns result handler.
+
+**Methods:**
+
+**getRedirectLabel(title, matchedTitle, queryValue)**
+
+Generates redirect label HTML for suggestions.
+
+**Parameters:**
+- `title` (string) - Target page title
+- `matchedTitle` (string) - Matched redirect title
+- `queryValue` (string) - User's query
+
+**Returns:** (string) HTML for redirect label
+
+**highlightTitle(title, match)**
+
+Highlights matching text in title.
+
+**Parameters:**
+- `title` (string) - Page title
+- `match` (string) - Text to highlight
+
+**Returns:** (string) HTML with highlighted match
+
+**getPlaceholderHTML(queryValue, templates)**
+
+Generates no-results placeholder.
+
+**Parameters:**
+- `queryValue` (string) - User's query
+- `templates` (Object) - Compiled Mustache templates
+
+**Returns:** (string) Placeholder HTML
+
+**getResultsHTML(results, queryValue, templates)**
+
+Generates results list HTML.
+
+**Parameters:**
+- `results` (Array) - Search result objects
+- `queryValue` (string) - User's query
+- `templates` (Object) - Compiled Mustache templates
+
+**Returns:** (string) Results list HTML
+
+**fetch(queryValue, activeSearchClient)**
+
+Fetches search results from active client.
+
+**Parameters:**
+- `queryValue` (string) - Search query
+- `activeSearchClient` (Object) - Active search client
+
+**Returns:** (Object) With `abort` function and `fetch` promise
+
+**render(searchQuery, templates)**
+
+Renders search action elements.
+
+**clear()**
+
+Clears results from DOM.
+
+**init()**
+
+Initializes the results handler.
+
+**Example:**
+```javascript
+const searchResults = require('./searchResults.js')();
+const searchClient = require('./searchClient.js')(config);
+
+searchResults.init();
+const { abort, fetch } = searchResults.fetch('example', searchClient.active.client);
+
+try {
+  const response = await fetch;
+  const html = searchResults.getResultsHTML(response.results, 'example', compiledTemplates);
+} catch (error) {
+  if (error.name !== 'AbortError') {
+    throw error;
+  }
+}
+```
+
+### Search Query
+
+Manages the current search query state.
+
+#### searchQuery()
+
+Factory function for query state management.
+
+**Properties:**
+- `value` (string) - Current query
+- `valueHtml` (string) - HTML-encoded query
+- `isValid` (boolean) - Whether query is valid (non-empty)
+
+**Methods:**
+- `setValue(value)` - Set query value
+- `remove(pattern)` - Remove pattern from query
+- `replace(pattern, replacement)` - Replace pattern in query
+
+## Configuration Variables
+
+From `skin.json` configuration:
+
+- **wgCitizenSearchGateway** (string) - Default search client (`mwActionApi` | `mwRestApi` | `custom`)
+- **wgCitizenSearchDescriptionSource** (string) - Source for descriptions (default: `textextracts`)
+- **wgCitizenMaxSearchResults** (number) - Maximum results to show (default: 10)
+
+## Templates
+
+The module uses Mustache templates for rendering:
+
+- `TypeaheadElement.mustache` - Main typeahead container
+- `TypeaheadPlaceholder.mustache` - Loading/empty state placeholder
+- `TypeaheadList.mustache` - Results list wrapper
+- `TypeaheadListItem.mustache` - Individual result item
+
+## Special Features
+
+### Command Mode
+
+Search supports special syntax for enhanced functionality:
+
+**Template Search:**
+```
+{{TemplateName}}
+```
+Automatically searches in Template namespace.
+
+**Link Search:**
+```
+[[PageName]]
+```
+Direct page name search.
+
+**Slash Commands:**
+```
+/command query
+```
+Triggers custom search clients based on command.
+
+### Composition Mode (CJK)
+
+The typeahead respects IME composition state and only updates after composition is complete:
+
+```javascript
+typeahead.input.isComposing = true; // During IME composition
+typeahead.input.isComposing = false; // Composition complete
+```
+
+## Events
+
+The module responds to standard input events:
+
+- `focus` - Expands search card and refreshes typeahead
+- `input` - Updates query and fetches suggestions
+- `blur` - Collapses search card
+- `keydown` - Handles keyboard navigation
+- `compositionstart`/`compositionend` - Handles IME input
+
+## Styling
+
+CSS classes for customization:
+
+- `.citizen-typeahead-input-group` - Input wrapper
+- `.citizen-typeahead-input` - Search input
+- `.citizen-typeahead-input-overlay` - Display overlay
+- `.citizen-typeahead-group` - Result group container
+- `.citizen-typeahead-list-item` - Individual result
+- `.citizen-typeahead__highlight` - Highlighted match text
+- `.citizen-loading` - Loading state indicator
+
+## Related Modules
+
+- [Command Palette](/api/command-palette) - Advanced search interface
+- [Scripts](/api/scripts) - Core skin scripts
